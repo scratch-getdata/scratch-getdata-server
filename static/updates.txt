@@ -1,0 +1,9 @@
+Update (2023-Jul-10)
+🆕 New Features and Improvements: <br> Added Beta badge in sidebar at updates <br> <br> 🐛 Bug Fixes: <br> fixed typo on sidebar in updates
+Please see details by clicking here
+
+
+
+Update (2023-Jul-9)
+🆕 New Features: <br> Added Updates Page <br> Added Sidebar <br> Added Dark Theme to updates <br> <br> 🐛 Bug Fixes: <br> Fixed is_scratcher
+Added Update Page <br> Added Sidebar <br> Fixed is_scratcher
