@@ -25,7 +25,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Start Flask server
-        run: python app.py &
+        run: python main.py &
         id: server
 
       - name: Wait for server to start
@@ -33,4 +33,7 @@ jobs:
 
       - name: Stop Flask server
         if: ${{ job.status == 'success' }}
-        run: kill ${{ steps.server.id }}
+        run: |
+          if pgrep -f "python app.py" > /dev/null; then
+            kill $(pgrep -f "python main.py")
+          fi
