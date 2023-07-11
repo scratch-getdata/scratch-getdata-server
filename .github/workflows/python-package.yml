@@ -30,11 +30,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Start Flask server
-        run: python main.py > server.log 2>&1 &
+        run: python main.py
         id: server
-
-      - name: Print server output
-        run: cat server.log
 
       - name: Wait for server to start
         run: sleep 5
