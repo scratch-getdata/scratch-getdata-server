@@ -38,7 +38,7 @@ jobs:
 
       - name: Run tests
         run: |
-          if ! curl -sSf "http://localhost:5000"; then
+          if ! curl -sSf "http://localhost:8080"; then
             exit 1
           fi
         continue-on-error: false
