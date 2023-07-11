@@ -1,4 +1,4 @@
-name: Test Flask server
+name: Auto Test
 
 on:
   push:
