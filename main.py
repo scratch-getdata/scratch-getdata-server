@@ -14,7 +14,7 @@ from PIL import Image
 from requests.exceptions import RequestException
 from colorama import Fore, Back, Style
 
-app = Flask('app')
+app = Flask(app)
 
 time.sleep(1)
 
