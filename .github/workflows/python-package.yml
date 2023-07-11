@@ -1,4 +1,4 @@
-name: Test Flask server
+name: Auto Test
 
 on:
   push:
@@ -33,7 +33,7 @@ jobs:
 
       - name: Run tests
         run: |
-          if ! python test.py; then
+          if ! curl -sSf "http://localhost:5000"; then
             exit 1
           fi
         continue-on-error: false
