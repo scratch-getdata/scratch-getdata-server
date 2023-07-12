@@ -1,0 +1,42 @@
+name: Mark as stale
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run every day at midnight
+  issues:
+    types: [opened, edited, labeled, unlabeled]
+  pull_request:
+    types: [opened, edited, labeled, unlabeled]
+
+jobs:
+  mark-stale:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Mark stale issues and pull requests
+        uses: peter-evans/stale@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: 'This issue has been automatically marked as stale because there has been no activity for 80 days. Please comment on this issue if you still need help or if the issue is still relevant.'
+          stale-pr-message: 'This pull request has been automatically marked as stale because there has been no activity for 80 days. Please review and update this pull request if it is still relevant.'
+          days-before-stale: 80
+          days-before-close: 7
+
+      - name: Add stale label to issues and pull requests
+        uses: peter-evans/add-labels@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-labels: stale
+
+      - name: Remove stale label from issues and pull requests
+        uses: peter-evans/remove-labels@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-labels: stale
+
+      - name: Add open label to issues and pull requests
+        uses: peter-evans/labeler@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          labels: open
+          reopen_closed: true
