@@ -1,18 +1,42 @@
-from flask import render_template, send_file, request
-from flask import Flask, jsonify
-from flask import abort
-from flask import url_for
-from flask_autoindex import AutoIndex
-import json
-import io
 import os
-import re
 import time
-import requests
-from bs4 import BeautifulSoup
-from PIL import Image
-from requests.exceptions import RequestException
-from colorama import Fore, Back, Style
+try:
+    from flask import render_template, send_file, request
+    from flask import Flask, jsonify
+    from flask import abort
+    from flask import url_for
+    from flask_autoindex import AutoIndex
+    import json
+    import io
+    import re
+    import requests
+    from bs4 import BeautifulSoup
+    from PIL import Image
+    from requests.exceptions import RequestException
+    from colorama import Fore, Back, Style
+except:
+    print(Fore.RED + "Error: ModuleNotFound trying to install via requirements.txt" + Fore.RESET)
+    try:
+        os.system('pip install -r requirements.txt')
+    except:
+        print(Fore.RED + "Error: Cannot install via requirements.txt the process may exit." + Fore.RESET)
+        exit(1)
+    time.sleep(1)
+    from flask import render_template, send_file, request
+    from flask import Flask, jsonify
+    from flask import abort
+    from flask import url_for
+    from flask_autoindex import AutoIndex
+    import json
+    import io
+    import re
+    import time
+    import requests
+    from bs4 import BeautifulSoup
+    from PIL import Image
+    from requests.exceptions import RequestException
+    from colorama import Fore, Back, Style
+    print(Fore.GREEN + "Install and import completed without any errors." + Fore.RESET)
 
 app = Flask('app')
 
