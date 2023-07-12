@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+Please check the box to continue*
+- [ ] I have searched and had not found any similar issues already created*
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
