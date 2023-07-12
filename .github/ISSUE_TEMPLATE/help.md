@@ -2,7 +2,7 @@
 name: Help
 about: Help
 title: ''
-labels: ''
+labels: help
 assignees: ''
 
 ---
