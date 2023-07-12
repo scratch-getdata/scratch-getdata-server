@@ -9,6 +9,8 @@ Please credit "kokofixcomputers on scratch" if you use or "@kokofixcomputers on 
 
 The home page: <a href="https://scratch-get-data.kokoiscool.repl.co">link</a>
 
+If your looking for the python module code here is the link: https://github.com/kokofixcomputers/Scratch-getdata
+
 Contributing:
 ------------
 
