@@ -25,7 +25,7 @@ jobs:
           current_date=$(date +%s)
 
           # Iterate over all issues and pull requests
-          for item in $(jq -r '.[] | @base64' $GITHUB_EVENT_PATH); do
+          for item in $(jq -r '.[] | @base64' <<< "${GITHUB_EVENT_PATH}"); do
             _jq() {
               echo ${item} | base64 --decode | jq -r ${1}
             }
