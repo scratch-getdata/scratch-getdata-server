@@ -14,72 +14,50 @@ jobs:
 
     steps:
       - name: Mark stale issues and pull requests
-        uses: peter-evans/stale@v2
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          stale-issue-message: 'This issue has been automatically marked as stale because there has been no activity for 80 days. Please comment on this issue if you still need help or if the issue is still relevant.'
-          stale-pr-message: 'This pull request has been automatically marked as stale because there has been no activity for 80 days. Please review and update this pull request if it is still relevant.'
-          days-before-stale: 80
-          days-before-close: 7
+        run: |
+          stale_message="This issue has been automatically marked as stale because there has been no activity for 80 days. Please comment on this issue if you still need help or if the issue is still relevant."
+          stale_label="stale"
+          open_label="open"
+          days_before_stale=80
+          days_before_close=7
 
-      - name: Add stale label to issues and pull requests
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const staleLabel = 'stale';
-            const context = github.context;
-            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
-            const { owner, repo } = context.repo;
+          # Get the current date
+          current_date=$(date +%s)
 
-            // Add the stale label to issues and pull requests
-            const addLabel = async (number) => {
-              await octokit.issues.addLabels({
-                owner,
-                repo,
-                issue_number: number,
-                labels: [staleLabel]
-              });
-            };
-
-            // Remove the stale label from issues and pull requests
-            const removeLabel = async (number) => {
-              await octokit.issues.removeLabel({
-                owner,
-                repo,
-                issue_number: number,
-                name: staleLabel
-              });
-            };
-
-            // Check if the event is an issue or pull request
-            if (context.eventName === 'issues') {
-              const { action, issue } = context.payload;
-              const { number } = issue;
-
-              // Add the stale label when an issue is opened or edited
-              if (action === 'opened' || action === 'edited') {
-                await addLabel(number);
-              }
-
-              // Remove the stale label when an issue is labeled or unlabeled
-              if (action === 'labeled' || action === 'unlabeled') {
-                await removeLabel(number);
-              }
+          # Iterate over all issues and pull requests
+          for item in $(jq -r '.[] | @base64' $GITHUB_EVENT_PATH); do
+            _jq() {
+              echo ${item} | base64 --decode | jq -r ${1}
             }
 
-            // Check if the event is a pull request
-            if (context.eventName === 'pull_request') {
-              const { action, pull_request } = context.payload;
-              const { number } = pull_request;
+            # Get the item type (issue or pull request)
+            item_type=$(_jq '.issue != null')
 
-              // Add the stale label when a pull request is opened or edited
-              if (action === 'opened' || action === 'edited') {
-                await addLabel(number);
-              }
+            # Get the item number
+            item_number=$(_jq '.issue.number // .pull_request.number')
 
-              // Remove the stale label when a pull request is labeled or unlabeled
-              if (action === 'labeled' || action === 'unlabeled') {
-                await removeLabel(number);
-              }
-            }
+            # Get the item updated date
+            item_updated_at=$(_jq '.issue.updated_at // .pull_request.updated_at')
+
+            # Calculate the number of days since the item was last updated
+            updated_days=$(( (current_date - $(date --date=$item_updated_at +%s)) / 86400 ))
+
+            # Check if the item is stale
+            if [[ $updated_days -ge $days_before_stale ]]; then
+              # Add the stale label
+              echo "Adding the stale label to #$item_number"
+              echo "::add-labels::$stale_label"
+
+              # Add a comment to the item
+              echo "Adding a stale comment to #$item_number"
+              echo "::comment::$stale_message"
+            else
+              # Remove the stale label
+              echo "Removing the stale label from #$item_number"
+              echo "::remove-labels::$stale_label"
+
+              # Add the open label
+              echo "Adding the open label to #$item_number"
+              echo "::add-labels::$open_label"
+            fi
+          done
