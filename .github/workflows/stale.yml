@@ -1,4 +1,4 @@
-name: Mark as stale
+name: Mark stale issues and pull requests
 
 on:
   schedule:
@@ -23,20 +23,63 @@ jobs:
           days-before-close: 7
 
       - name: Add stale label to issues and pull requests
-        uses: peter-evans/add-labels@v2
+        uses: actions/github-script@v4
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          issue-labels: stale
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const staleLabel = 'stale';
+            const context = github.context;
+            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+            const { owner, repo } = context.repo;
 
-      - name: Remove stale label from issues and pull requests
-        uses: peter-evans/remove-labels@v2
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          issue-labels: stale
+            // Add the stale label to issues and pull requests
+            const addLabel = async (number) => {
+              await octokit.issues.addLabels({
+                owner,
+                repo,
+                issue_number: number,
+                labels: [staleLabel]
+              });
+            };
 
-      - name: Add open label to issues and pull requests
-        uses: peter-evans/labeler@v2
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          labels: open
-          reopen_closed: true
+            // Remove the stale label from issues and pull requests
+            const removeLabel = async (number) => {
+              await octokit.issues.removeLabel({
+                owner,
+                repo,
+                issue_number: number,
+                name: staleLabel
+              });
+            };
+
+            // Check if the event is an issue or pull request
+            if (context.eventName === 'issues') {
+              const { action, issue } = context.payload;
+              const { number } = issue;
+
+              // Add the stale label when an issue is opened or edited
+              if (action === 'opened' || action === 'edited') {
+                await addLabel(number);
+              }
+
+              // Remove the stale label when an issue is labeled or unlabeled
+              if (action === 'labeled' || action === 'unlabeled') {
+                await removeLabel(number);
+              }
+            }
+
+            // Check if the event is a pull request
+            if (context.eventName === 'pull_request') {
+              const { action, pull_request } = context.payload;
+              const { number } = pull_request;
+
+              // Add the stale label when a pull request is opened or edited
+              if (action === 'opened' || action === 'edited') {
+                await addLabel(number);
+              }
+
+              // Remove the stale label when a pull request is labeled or unlabeled
+              if (action === 'labeled' || action === 'unlabeled') {
+                await removeLabel(number);
+              }
+            }
