@@ -17,6 +17,6 @@ jobs:
           days-before-close: 2
           days-before-pr-stale: 999999999
           days-before-pr-close: 1
-          exempt-issue-labels: ''
+          exempt-issue-labels: 'High Priority,Medium Priority'
           exempt-issue-assignees: 'kokofixcomputers'
           operations-per-run: 200
