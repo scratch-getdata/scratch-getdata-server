@@ -1,63 +1,22 @@
-name: Mark stale issues and pull requests
-
+name: 'Automatically close stale issues and PRs'
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *' # Run every day at midnight
-  issues:
-    types: [opened, edited, labeled, unlabeled]
-  pull_request:
-    types: [opened, edited, labeled, unlabeled]
+    - cron: '0 */6 * * *'
+#Run every 6 hours
 
 jobs:
-  mark-stale:
+  stale:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Mark stale issues and pull requests
-        run: |
-          stale_message="This issue has been automatically marked as stale because there has been no activity for 80 days. Please comment on this issue if you still need help or if the issue is still relevant."
-          stale_label="stale"
-          open_label="open"
-          days_before_stale=1
-          days_before_close=7
-
-          # Get the current date
-          current_date=$(date +%s)
-
-          # Iterate over all issues and pull requests
-          for item in $(jq -r '.[] | @base64' <<< "${GITHUB_EVENT_PATH}"); do
-            _jq() {
-              echo ${item} | base64 --decode | jq -r ${1}
-            }
-
-            # Get the item type (issue or pull request)
-            item_type=$(_jq '.issue != null')
-
-            # Get the item number
-            item_number=$(_jq '.issue.number // .pull_request.number')
-
-            # Get the item updated date
-            item_updated_at=$(_jq '.issue.updated_at // .pull_request.updated_at')
-
-            # Calculate the number of days since the item was last updated
-            updated_days=$(( (current_date - $(date --date=$item_updated_at +%s)) / 86400 ))
-
-            # Check if the item is stale
-            if [[ $updated_days -ge $days_before_stale ]]; then
-              # Add the stale label
-              echo "Adding the stale label to #$item_number"
-              echo "::add-labels::$stale_label"
-
-              # Add a comment to the item
-              echo "Adding a stale comment to #$item_number"
-              echo "::comment::$stale_message"
-            else
-              # Remove the stale label
-              echo "Removing the stale label from #$item_number"
-              echo "::remove-labels::$stale_label"
-
-              # Add the open label
-              echo "Adding the open label to #$item_number"
-              echo "::add-labels::$open_label"
-            fi
-          done
+      - uses: actions/stale@v7
+        with:
+          stale-issue-message: 'We are clearing up our old issues and your ticket has been open for 3 months with no activity. Remove stale label or comment or this will be closed in 2 days.'
+          close-issue-message: 'This issue was closed because it has been stalled for 2 days with no activity.'
+          days-before-stale: 1
+          days-before-close: 2
+          days-before-pr-stale: 999999999
+          days-before-pr-close: 1
+          exempt-issue-labels: ''
+          exempt-issue-assignees: 'kokofixcomputers'
+          operations-per-run: 200
