@@ -18,7 +18,7 @@ jobs:
           stale_message="This issue has been automatically marked as stale because there has been no activity for 80 days. Please comment on this issue if you still need help or if the issue is still relevant."
           stale_label="stale"
           open_label="open"
-          days_before_stale=80
+          days_before_stale=1
           days_before_close=7
 
           # Get the current date
