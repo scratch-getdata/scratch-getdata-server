@@ -8,8 +8,8 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
     <title>Site Updates</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='update.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nonflash.css') }}">
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nospan.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nospan.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nonflash.css') }}">
     <script>
         function openNav() {
             document.getElementById("mySidebar").style.width = "250px";
@@ -45,41 +45,54 @@
         <a href="/docs">Docs</a>
         <a href="/updates">Updates <span class="badge bg-warning">Beta</span></a>
         <a href="/why">Why Getdata and what is</a>
-        <a href="/install">Install</a> 
+        <a href="/install">Install</a>
         <a href="/python/docs/">Python Module Docs</a>
     </div>
 
-    <h1 class="headingupdate">What is Getdata and Why Getdata</h1>
-    <br>
-    <h2 class="headingupdate">
-      What is "Scratch-GetData"
-    </h2>
+    <h1 class="headingupdate">Docs for how to use the python module.</h1>
     <br>
     <br>
-    <h3 class="headingupdate">
-      "Scratch-GetData" is an API alternative to scratchdb. It is mainly made for scratchattach projects, and on servers that got banned by scratch, you can use this instead of scratch's API to fetch scratch data.
+  <h2>You will need to install the python module first.</h2>
+
+<br>
+<p>Install Python Module <a class="underlined_text" href="https://pypi.org/project/scratch-getdata">Click here for how to use.</a></p>
+
+  <h4>
+Required Step:  Initialize the ScratchAPIClient class: client = ScratchAPIClient()
+<br>
+Retrieving the follower count of a user: follower_count = client.get_follower_count(username)
+<br>
+Checking if a user is a Scratcher: is_scratcher = client.is_scratcher(username)
+<br>
+Retrieving the following count of a user: following_count = client.get_following_count(username)
+<br>
+Retrieving the "What I'm Working On" (WIWO) status of a user: wiwo_status = client.get_wiwo(username)
+<br>
+Retrieving the "About Me" information of a user: about_me = client.get_about_me(username)
+<br>
+Retrieving the messages of a user: messages = client.get_messages(username)
+<br>
+Retrieving the creator of a project: project_creator = client.get_project_creator(project_id)
+<br>
+Retrieving the name of a project: project_name = client.get_project_name(project_id)
+<br>
+Retrieving the description of a project: project_description = client.get_project_description(project_id)
+<br>
+Retrieving the instructions of a project: project_instructions = client.get_project_instructions(project_id)
+<br>
+Retrieving the blocks of a project: project_blocks = client.get_project_blocks(project_id)
+<br>
+Retrieving the title of a forum post: forum_title = client.get_forum_title(post_id)
+<br>
+Retrieving the category of a forum post: forum_category = client.get_forum_category(post_id)
+<br>
+Retrieving the country of a Scratch user: user_country = client.get_scratch_user_country(username)
+<br>
+See if a user exist: user_country = client.get_user_exist(username)
+  </h4>
+
     </h3>
-    <br>
-    <br>
-    <h2 class="headingupdate">
-      Why Scratch-Getdata?
-    </h2>
-    <br>
-    <br>
-    <h3 class="headingupdate">
-      Now you might ask, Why not scratchdb or some other API?" Here is your answer: <br>
-      <br>
-        ScratchDB has lots of features, which is good, but the problem is that the accuracy is not good enough. There are some reasons you would need the data to be up-to-date, such as if you're making a live follower count.<br>
-      <br>
-      Scratch-Getdata also has many features, and its accuracy is mostly better than scratchdb since the data is fetched directly from the official scratch API and extracted when a request is sent.
-      <br>
-      <br>
-      Now you may ask, then, why not just fetch from scratch instead? Well, you could, but there are servers banned from using the scratch API, so that is why @kokofixcomputers made this API so that servers banned from using scratch also get accurate information.<br>
-      <br>
-      But for servers that are not banned from scratch, you can also fetch from here, which makes things easier and means you don't have to do all the JSON extraction and web scraping. <br>
-      <br>
-      Also, Please Credit "@kokofixcomputers on scratch" if you use
-    </h3>
+
     <br>
     <br>
     <div class="container">
