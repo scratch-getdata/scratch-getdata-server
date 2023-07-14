@@ -86,6 +86,10 @@ def update():
 def updatet():
    return render_template('update-test.html')
 
+@app.route('/python/docs/')
+def updatet():
+   return render_template('python-docs.html')
+
 @app.route('/install/')
 def install():
    return render_template('install.html')
