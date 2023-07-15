@@ -7,6 +7,7 @@ try:
     from flask import url_for
     from flask_autoindex import AutoIndex
     import json
+    import secrets
     import io
     import re
     import requests
@@ -29,6 +30,7 @@ except:
     from flask_autoindex import AutoIndex
     import json
     import io
+    import secrets
     import re
     import time
     import requests
@@ -40,9 +42,13 @@ except:
 
 app = Flask('app')
 
+app.secret_key = secrets.token_hex(16)
+
 time.sleep(1)
 
 print(Fore.GREEN + "Flask Initialized." + Fore.RESET)
+
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 # Require Define Functions:
 
