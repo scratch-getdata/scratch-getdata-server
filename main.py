@@ -539,6 +539,50 @@ def internel_error():
 #Testing use
 #Code removed
 
+#Admin page
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if username == os.environ.get('username_admin') and password == os.environ.get('password_admin'):
+            session['username'] = username  # Store the username in the session
+            session.permanent = True
+            flash('You were successfully logged in')
+            # Redirect the user to the afterlogin URL parameter or the home page
+            return redirect(request.args.get('afterlogin') or url_for('home'))
+        else:
+            flash('Invalid username or password')
+    return render_template('login.html')
+
+@app.route('/admin')
+def admin():
+    if 'username' in session:
+        print(f'session username: {session["username"]}')
+        return render_template('admin.html')
+    else:
+        print('redirecting to login')
+        # Store the URL of the current page in the session
+        session['previous_page'] = request.url
+        # Redirect the user to the login page with the afterlogin URL parameter
+        return redirect(url_for('login', afterlogin='/admin'))
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('home'))
+
+@app.route('/update_updates', methods=['POST'])
+def update_updates():
+    if 'username' in session:
+        updates = request.form['updates']
+        with open('static/updates.txt', 'w') as f:
+            f.write(updates)
+        return redirect(url_for('admin'))
+    else:
+        return redirect(url_for('login'))
+
 #Other things and error handlers
 
 @app.route("/keep-alive/")
