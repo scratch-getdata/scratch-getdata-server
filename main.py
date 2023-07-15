@@ -50,6 +50,11 @@ print(Fore.GREEN + "Flask Initialized." + Fore.RESET)
 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+    app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
+
 # Require Define Functions:
 
 def get_scratch_data(url):
