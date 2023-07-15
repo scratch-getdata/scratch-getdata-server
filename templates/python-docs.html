@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
-    <title>Site Updates</title>
+    <title>Scratch-GetData - Python Module Docs</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='update.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nospan.css') }}">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nonflash.css') }}">
@@ -47,62 +47,153 @@
         <a href="/why">Why Getdata and what is</a>
         <a href="/install">Install</a>
         <a href="/python/docs/">Python Module Docs</a>
+        <a href="/contact/">Contact</a>
     </div>
 
     <h1 class="headingupdate">Docs for how to use the python module.</h1>
     <br>
     <br>
-  <h2>You will need to install the python module first.</h2>
+  <h2>You will need to install the python module first see the Install page.</h2>
 
 <br>
+  <br>
+  <br>
+<h4>
 
+        <h3>Required Step:  Initialize the ScratchAPIClient class:</h3>
+      <center><div class="example">
+
+        <h4>client = ScratchAPIClient()</h4>
+
+      </div></center>
+<br>
+<br>
+  </h4>
   <h4>
-Required Step:  Initialize the ScratchAPIClient class: client = ScratchAPIClient()
 <br>
     <br>
-Retrieving the follower count of a user: follower_count = client.get_follower_count(username)
+    <br>
+<br>
+    <p>Retrieving the follower count of a user:</p>
+      <center><div class="example">
+
+        <p>follower_count = client.get_follower_count(username)</p>
+
+      </div></center>
 <br>
 <br>
-Checking if a user is a Scratcher: is_scratcher = client.is_scratcher(username)
+    <p>Checking if a user is a Scratcher:</p>
+      <center><div class="example">
+
+        <p>is_scratcher = client.is_scratcher(username)</p>
+
+      </div></center>
+<br>
+<br>    
+    <p>Retrieving the following count of a user:</p>
+      <center><div class="example">
+
+        <p>following_count = client.get_following_count(username)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the following count of a user: following_count = client.get_following_count(username)
+        <p>Retrieving the "What I'm Working On" (WIWO) status of a user:</p>
+      <center><div class="example">
+
+        <p>wiwo_status = client.get_wiwo(username)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the "What I'm Working On" (WIWO) status of a user: wiwo_status = client.get_wiwo(username)
+        <p>Retrieving the "About Me" information of a user:</p>
+      <center><div class="example">
+
+        <p>about_me = client.get_about_me(username)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the "About Me" information of a user: about_me = client.get_about_me(username)
+        <p>Retrieving the messages of a user:</p>
+      <center><div class="example">
+
+        <p>messages = client.get_messages(username)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the messages of a user: messages = client.get_messages(username)
+        <p>Retrieving the creator of a project:</p>
+      <center><div class="example">
+
+        <p>project_creator = client.get_project_creator(project_id)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the creator of a project: project_creator = client.get_project_creator(project_id)
+        <p>Retrieving the name of a project:</p>
+      <center><div class="example">
+
+        <p>project_name = client.get_project_name(project_id)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the name of a project: project_name = client.get_project_name(project_id)
+        <p>Retrieving the description of a project:</p>
+      <center><div class="example">
+
+        <p>project_description = client.get_project_description(project_id)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the description of a project: project_description = client.get_project_description(project_id)
+        <p>Retrieving the instructions of a project:</p>
+      <center><div class="example">
+
+        <p>project_instructions = client.get_project_instructions(project_id)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the instructions of a project: project_instructions = client.get_project_instructions(project_id)
+        <p>Retrieving the blocks of a project:</p>
+      <center><div class="example">
+
+        <p>project_blocks = client.get_project_blocks(project_id)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the blocks of a project: project_blocks = client.get_project_blocks(project_id)
+        <p>Retrieving the title of a forum post:</p>
+      <center><div class="example">
+
+        <p>forum_title = client.get_forum_title(post_id)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the title of a forum post: forum_title = client.get_forum_title(post_id)
+        <p>Retrieving the category of a forum post:</p>
+      <center><div class="example">
+
+        <p>forum_category = client.get_forum_category(post_id)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the category of a forum post: forum_category = client.get_forum_category(post_id)
+        <p>Retrieving the country of a Scratch user:</p>
+      <center><div class="example">
+
+        <p>user_country = client.get_scratch_user_country(username)</p>
+
+      </div></center>
 <br>
 <br>
-Retrieving the country of a Scratch user: user_country = client.get_scratch_user_country(username)
+            <p>See if a user exist:</p>
+      <center><div class="example">
+
+        <p>user_country = client.get_user_exist(username)</p>
+
+      </div></center>
 <br>
 <br>
-See if a user exist: user_country = client.get_user_exist(username)
   </h4>
 
     </h3>

@@ -86,6 +86,10 @@ def update():
 def updatet():
    return render_template('update-test.html')
 
+@app.route('/contact/')
+def contact():
+   return render_template('contact.html')
+
 @app.route('/python/docs/')
 def pythondocs():
    return render_template('python-docs.html')
