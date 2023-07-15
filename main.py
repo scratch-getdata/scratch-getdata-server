@@ -10,6 +10,7 @@ try:
     import secrets
     import io
     import re
+    from datetime import timedelta
     import requests
     from bs4 import BeautifulSoup
     from PIL import Image
@@ -32,6 +33,7 @@ except:
     import io
     import secrets
     import re
+    from datetime import timedelta
     import time
     import requests
     from bs4 import BeautifulSoup
