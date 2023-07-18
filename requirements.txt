@@ -7,5 +7,5 @@ PyJWT==2.1.0
 APScheduler==3.8.0
 beautifulsoup4==4.9.3
 Pillow==9.3.0
-requests==2.26.0
+requests==2.31.0
 colorama==0.4.4
