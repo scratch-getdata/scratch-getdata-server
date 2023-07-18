@@ -50,6 +50,14 @@ h6 {
   font-family: 'Fira Code', monospace;
 }
 
+.important-example {
+  border-radius: 0.8vw;
+  background-color: #a3a3a3;
+  padding: 2vw;
+  width: 39rem;
+  font-family: 'Fira Code', monospace;
+}
+
 h1 {
   font-size: 5rem;
   color: white;

@@ -1,19 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Login</title>
+    <title>Signup</title>
     <style>
       body {
         margin: 0;
         padding: 0;
-        background-color: #222a3b;
-        font-family: 'Fira Code', monospace;
-        color: white;
-      }
-        a {
-        margin: 0;
-        padding: 0;
-        text-decoration: underline;
         background-color: #222a3b;
         font-family: 'Fira Code', monospace;
         color: white;
@@ -26,28 +18,29 @@
         height: 100vh;
       }
 
-      .login-box {
+      .signup-box {
         background-color: #384154;
         border-radius: 1rem;
         padding: 2rem;
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
       }
 
-      .login-box h2 {
+      .signup-box h2 {
         margin-top: 0;
         margin-bottom: 2rem;
         font-size: 2rem;
         text-align: center;
       }
 
-      .login-box label {
+      .signup-box label {
         display: block;
         margin-bottom: 0.5rem;
         font-size: 1.2rem;
       }
 
-      .login-box input[type="text"],
-      .login-box input[type="password"] {
+      .signup-box input[type="text"],
+      .signup-box input[type="password"],
+      .signup-box input[type="email"] {
         display: block;
         width: 100%;
         padding: 0.5rem;
@@ -57,7 +50,7 @@
         border: none;
       }
 
-      .login-box input[type="submit"] {
+      .signup-box input[type="submit"] {
         display: block;
         width: 100%;
         padding: 0.5rem;
@@ -71,26 +64,30 @@
         transition: background-color 0.3s ease;
       }
 
-      .login-box input[type="submit"]:hover {
+      .signup-box input[type="submit"]:hover {
         background-color: #ff9b85;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <div class="login-box">
-        <h2>Login</h2>
+      <div class="signup-box">
+        <h2>Signup</h2>
         {% if error %}
           <p>{{ error }}</p>
         {% endif %}
         <form method="post">
           <label for="username">Username:</label>
           <input type="text" id="username" name="username">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email">
           <label for="password">Password:</label>
           <input type="password" id="password" name="password">
-          <input type="submit" value="Login">
+          <label for="confirm_password">Confirm Password:</label>
+          <input type="password" id="confirm_password" name="confirm_password">
+          <input type="submit" value="Signup">
           <br>
-          <p>Don't have a account? <a href="/signup">sign up here</a></p>
+          <p>Already have an account? <a href="/login">Login here</a></p>
         </form>
       </div>
     </div>
