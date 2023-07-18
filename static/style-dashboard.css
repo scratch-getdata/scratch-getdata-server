@@ -1,0 +1,75 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #222a3b;
+  font-family: 'Fira Code', monospace;
+  color: white;
+}
+
+.custom-navbar {
+  background-color: #384154 !important;
+}
+
+.sidebar {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #384154;
+  overflow-x: hidden;
+  padding-top: 60px;
+}
+
+.sidebar a {
+  padding: 8px 8px 8px 16px;
+  text-decoration: none;
+  font-size: 18px;
+  color: white;
+  display: block;
+  transition: 0.3s;
+}
+
+.sidebar a:hover {
+  color: #007bff;
+}
+
+.sidebar .active {
+  background-color: #007bff;
+  color: white;
+}
+
+.card {
+  background-color: #384154;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+  margin-bottom: 2rem;
+}
+
+.card-title {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.card-text {
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+  .col-md-2 {
+    flex: 0 0 16.666667%;
+    max-width: 16.666667%;
+  }
+  .col-md-10 {
+    flex: 0 0 83.333333%;
+    max-width: 83.333333%;
+  }
+}

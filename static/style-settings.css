@@ -1,0 +1,42 @@
+/* Set the background color of the page */
+body {
+  background-color: #f8f9fa;
+}
+
+/* Style the navbar */
+.custom-navbar {
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* Style the sidebar */
+.sidebar {
+  background-color: #343a40;
+  color: #fff;
+  height: 100vh;
+  padding-top: 1rem;
+}
+
+.sidebar a {
+  color: #fff;
+}
+
+.sidebar a.active {
+  font-weight: bold;
+}
+
+/* Style the form */
+form {
+  margin-top: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-control {
+  width: 100%;
+}
+
+.btn-primary {
+  margin-top: 1rem;
+}

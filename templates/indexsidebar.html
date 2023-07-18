@@ -25,15 +25,6 @@
               <i class="bi bi-list"></i> More
             </button>
           </li>
-          <li class="nav-item">
-            <a class="btn btn-primary" href="/signup">Signup</a>
-          </li>
-          <li class="nav-item">
-            <a class="btn btn-primary" href="/login">Login</a>
-          </li>
-          <li class="nav-item">
-            <a class="btn btn-primary" href="/dashboard">Dashboard</a>
-          </li>
         </ul>
       </div>
     </div>
@@ -68,83 +59,86 @@
     </div>
   </div>
 
-  <script>
-    function openNav() {
-      document.getElementById("mySidebar").style.width = "250px";
-    }
-
-    function closeNav() {
-      document.getElementById("mySidebar").style.width = "0";
-    }
-
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    function applyDarkMode() {
-      document.body.classList.add('dark-mode');
-      const navbar = document.querySelector('.navbar');
-      navbar.classList.remove('navbar-light');
-      navbar.classList.add('navbar-dark');
-    }
-
-    function removeDarkMode() {
-      document.body.classList.remove('dark-mode');
-      const navbar = document.querySelector('.navbar');
-      navbar.classList.remove('navbar-dark');
-      navbar.classList.add('navbar-light');
-    }
-
-    if (darkModeMediaQuery.matches) {
-      applyDarkMode();
-    } else {
-      removeDarkMode();
-    }
-
-    darkModeMediaQuery.addEventListener('change', (event) => {
-      if (event.matches) {
-        applyDarkMode();
-      } else {
-        removeDarkMode();
-      }
-    });
-  </script>
 
 <div id="mySidebar" class="sidebar">
   <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-  <a href="../">Home</a>
-  <a href="/docs">Docs</a>
-  <a href="/updates">Updates <span class="badge bg-warning">Beta</span></a>
-  <a href="/why">Why Getdata and what is</a>
-  <a href="/install">Install</a>
-  <a href="/python/docs/">Python Module Docs</a>
-  <a href="/contact/">Contact</a>
+  <div id="sidebarContent">
+    <!-- Links will be added here -->
+  </div>
 </div>
 
 <script>
-  const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+function openNav() {
+  document.getElementById("mySidebar").style.width = "250px";
+}
 
-  function applyDarkMode() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.add('bg-dark');
-    sidebar.classList.add('text-white');
+function closeNav() {
+  document.getElementById("mySidebar").style.width = "0";
+}
+
+const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function applyDarkMode() {
+  document.body.classList.add('dark-mode');
+  const navbar = document.querySelector('.navbar');
+  navbar.classList.remove('navbar-light');
+  navbar.classList.add('navbar-dark');
+}
+
+function removeDarkMode() {
+  document.body.classList.remove('dark-mode');
+  const navbar = document.querySelector('.navbar');
+  navbar.classList.remove('navbar-dark');
+  navbar.classList.add('navbar-light');
+}
+
+if (darkModeMediaQuery.matches) {
+  applyDarkMode();
+} else {
+  removeDarkMode();
+}
+
+darkModeMediaQuery.addEventListener('change', (event) => {
+  if (event.matches) {
+    applyDarkMode();
+  } else {
+    removeDarkMode();
   }
+});
 
-  function removeDarkMode() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.remove('bg-dark');
-    sidebar.classList.remove('text-white');
-  }
+const sidebarContent = document.getElementById('sidebarContent');
 
-  function updateTheme() {
-    if (darkModeMediaQuery.matches) {
-      applyDarkMode();
-    } else {
-      removeDarkMode();
+function generateSidebar() {
+  const sidebarContent = document.getElementById("sidebarContent");
+  const sidebarText = `{{ sidebar_text }}`;
+  const lines = sidebarText.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.length > 0) {
+      const parts = line.split(" ");
+      const text = parts[0];
+      let href = "/";
+      let badge = "";
+      for (let j = 1; j < parts.length; j++) {
+        const arg = parts[j];
+        if (arg.startsWith("{tag=")) {
+          badge = `<a href="#" class="badge bg-warning">${arg.substring(5, arg.length - 1)}</a>`;
+        } else if (arg.startsWith("{url=")) {
+          href = arg.substring(5, arg.length - 1);
+        } else {
+          text += ` ${arg}`;
+        }
+      }
+      const a = document.createElement("a");
+      a.href = href;
+      a.innerHTML = text;
+      sidebarContent.appendChild(a);
+      sidebarContent.innerHTML += badge;
+      sidebarContent.innerHTML += "<br>";
     }
   }
-
-  updateTheme();
-
-  darkModeMediaQuery.addEventListener('change', updateTheme);
+}
+  generateSidebar()
 </script>
 
   <h1>Welcome to Scratch-Getdata</h1>
