@@ -1,5 +1,5 @@
 Flask==2.0.1
-Flask-AutoIndex==0.7.2
+Flask-AutoIndex==0.6.6
 Flask-JWT-Extended==4.3.0
 Flask-RESTful==0.3.9
 Flask-SQLAlchemy==2.5.1
