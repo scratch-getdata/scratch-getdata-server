@@ -285,7 +285,7 @@ def check_key():
 
     # Bypass the key check if random_key is None
     if random_key is None:
-        return
+        return render_template('nokeyprovided.html')
 
     # Check if the key is in the database
     c = conn.cursor()
@@ -297,9 +297,10 @@ def check_key():
         return render_template('keynotfound.html')
 
     # Get the user ID from the session
-    user_id = session.get('user_id')
+    c.execute('SELECT userid FROM keys WHERE key = ?', (random_key,))
+    user_id = c.fetchone()[0]  # Extract the value from the tuple
 
-    # Update the requests column for the user
+# Update the requests column for the user
     c.execute('UPDATE requests SET count = (SELECT COALESCE(count, 0) + 1 FROM requests WHERE userid = ?) WHERE userid = ?', (user_id, user_id))
     conn.commit()
 
