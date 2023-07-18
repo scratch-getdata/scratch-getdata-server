@@ -276,6 +276,7 @@ def handle_auth_error(e):
 
 @app.before_request
 def check_key():
+  if '/get' in request.path:
     # Get the random key from the query string
     random_key = request.args.get('key')
 
