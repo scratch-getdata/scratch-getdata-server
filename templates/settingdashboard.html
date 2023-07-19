@@ -126,7 +126,7 @@
           type: 'POST',
           success: function(response) {
             // Redirect to home page after account is deleted
-            window.location.href = '/';
+            window.location.href = '/?message=Delete Complete&status=success';
           },
           error: function(error) {
             console.log(error);

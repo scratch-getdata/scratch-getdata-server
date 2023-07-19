@@ -12,6 +12,9 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nospan.css') }}">
 </head>
 <body>
+  <div class="alert alert-{{status}} alert-dismissible">
+   {{ message }}
+</div>
   <nav class="navbar navbar-expand-lg navbar-light bg-light custom-navbar" data-bs-theme="dark">
     <div class="container-fluid">
       <a class="navbar-brand" href="#">Scratch-GetData</a>
@@ -116,6 +119,7 @@
   <a href="/why">Why Getdata and what is</a>
   <a href="/install">Install</a>
   <a href="/python/docs/">Python Module Docs</a>
+  <a href="/issue/">Issues <span class="badge bg-warning">Beta</span></a>
   <a href="/contact/">Contact</a>
 </div>
 

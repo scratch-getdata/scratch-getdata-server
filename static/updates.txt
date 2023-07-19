@@ -1,3 +1,9 @@
+Update (Test)
+Test
+Test
+
+
+
 Update (2023-Jul-16)
 Please remember to credit @kokofixcomputers this is a very big update <br> <br> 🆕 New Features and Improvements: <br> Added New Dashboard <br> Added Email Sending <br> Added account deletion <br> Added sha256 password hashing <br> Scratch-GetData now have Zero-Knowledge security <br> Fixed email link <br> <br> 🐛 Bug Fixes: <br> Fixed Login
 This is a very big update! <br> <br> Please see details by clicking here

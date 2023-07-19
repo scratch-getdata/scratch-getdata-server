@@ -1,18 +1,29 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Email Verification</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='email_verification.css') }}">
-  </head>
-  <body>
-    <div class="main">
-      <h1>Email Verification</h1>
-      <h6>Please enter the 6-digit verification code we sent to your email:</h6>
-      <form method="POST" action="{{ url_for('verify_email', userid=user_id) }}">
-        <input type="text" name="verification_code" maxlength="6" pattern="\d{6}" required>
-        <br><br>
-        <input type="submit" value="Verify">
-      </form>
-    </div>
-  </body>
+<head>
+  <title>Email Verification</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='email_verification.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="main">
+    <h1>Email Verification</h1>
+    <center><h6>Please enter the 6-digit verification code we sent to your email:</h6></center>
+    {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for message in messages %}
+        <center><p>{{ message }}</p></center>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+    <form method="POST" action="{{ url_for('email_verification', userid=user_id) }}" class="verification-form">
+      <input type="text" name="verification_code" maxlength="6" pattern="\d{6}" required>
+      <br><br>
+      <input type="submit" value="Verify" class="btn-primary">
+    </form>
+     <a href="resend_email">Resend Email</a>
+  </div>
+</body>
 </html>

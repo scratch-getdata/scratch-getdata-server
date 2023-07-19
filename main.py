@@ -15,6 +15,8 @@ import io
 import os
 import re
 import time
+import signal
+import sys
 import string
 import random
 import secrets
@@ -31,6 +33,22 @@ from flask.sessions import SecureCookieSessionInterface
 import hashlib
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_jwt_extended import JWTManager
+
+def signal_handler(signal, frame):
+    print("QUIT Signal Recived.")
+    print("Closing Database")
+    try:
+      conn.close()  
+    except:
+      print(Fore.RED + "Cannot close database. Database is probably already closed." + Fore.RESET)
+    sys.exit(0)
+
+# Register the signal_handler function to be called only on SIGINT (Ctrl+C)
+for sig in signal.Signals:
+    try:
+        signal.signal(sig, signal_handler)
+    except (OSError, RuntimeError):
+        pass
 
 #Required Init
 
@@ -62,7 +80,7 @@ app.config['JWT_COOKIE_SECURE'] = True
 app.config['JWT_COOKIE_CSRF_PROTECT'] = True
 app.config['JWT_CSRF_IN_COOKIES'] = True
 app.config['JWT_COOKIE_SAMESITE'] = 'Strict'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.abspath('users.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 jwt = JWTManager(app)
@@ -77,16 +95,15 @@ class CustomSessionInterface(SecureCookieSessionInterface):
 
 app.session_interface = CustomSessionInterface()
 
-class Session(db.Model):
-    __tablename__ = 'strings'
+class Strings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    token = db.Column(db.String(32), unique=True)
-    expires = db.Column(db.DateTime)
+    string = db.Column(db.String(32), unique=True)
+    created = db.Column(db.TIMESTAMP)
 
 def delete_expired_sessions():
     with app.app_context():
         now = datetime.utcnow()
-        expired_sessions = db.session.query(Session).filter(Session.expires < now).all()
+        expired_sessions = Strings.query.filter(Strings.created < now - timedelta(minutes=5)).all()
         for session in expired_sessions:
             db.session.delete(session)
         db.session.commit()
@@ -336,7 +353,16 @@ print(Fore.GREEN + "Important functions defined." + Fore.RESET)
 
 @app.route('/')
 def home():
-   return render_template('index.html')
+   message = request.args.get('message')
+   status = request.args.get('status')
+   if message is None:
+     return render_template('index.html')
+   else:
+     if status is None:
+       return render_template('index.html', message=message)
+     else:
+       return render_template('index.html', message=message, status=status)
+   
 if app == '__main__':
    app.run()
 
@@ -345,9 +371,20 @@ def settings():
     # Logic for the settings page
     return render_template('settings.html')
 
+@app.route('/redirecttohome')
+def redirecttohome():
+    para1 = request.args.get('para1')
+    para2 = request.args.get('para2')
+    # Logic for the settings page
+    return render_template('gotohome.html', para1='message', para1value=para1, para2='status', para2value=para2)
+
 @app.route('/sidebartest/')
 def homesidebar():
    return render_template('indexsidebar.html')
+
+@app.route('/issue/')
+def issue():
+   return render_template('problems.html')
 
 @app.route('/updates/')
 def update():
@@ -959,7 +996,13 @@ def login():
                 flash('You have successfully logged in')
             
             # Insert a new row into the strings table
-                c.execute('INSERT INTO strings (userid, string) VALUES (?, ?)', (session['user_id'], session['token'],))
+                now = datetime.utcnow()
+
+                now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+
+                print("Time: " + now_str)
+              
+                c.execute('INSERT INTO strings (userid, string, created) VALUES (?, ?, ?)', (session['user_id'], session['token'], now_str))
                 conn.commit()
                 print('userid: ' + str(session['user_id']) + ' string: ' + session['token'])
             
@@ -982,7 +1025,11 @@ def login():
           
             
             # Insert a new row into the strings table
-                c.execute('INSERT INTO strings (userid, string) VALUES (?, ?)', (session['user_id'], session['token'],))
+                now = datetime.utcnow()
+
+                print("Time: " + now)
+              
+                c.execute('INSERT INTO strings (userid, string, created) VALUES (?, ?, ?)', (session['user_id'], session['token'], now))
             
                 return redirect(url_for('admin'))
             else:
@@ -991,6 +1038,19 @@ def login():
             conn.close()  
         
     return render_template('login.html')
+
+@app.route('/serverstats')
+def server_status():
+    status_message = "All systems are operational"
+    last_updated = "July 18, 2023, 8:23 PM"
+    description = "This is the status page for the scratch-getdar"
+    server_version = "1.0.0"
+    server_status = "Online"
+    now = datetime.utcnow()
+    now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+    server_time = now_str
+    return render_template('serverstats.html', status_message=status_message, last_updated=last_updated, description=description, server_version=server_version, server_status=server_status, server_time=server_time)
+
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -1030,7 +1090,9 @@ def signup():
             
             # Insert the key into the database
             c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
+            c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
             conn.commit()
+            
             
             flash('User created successfully')
             sendemailtorec(email, verification_code)
@@ -1039,7 +1101,7 @@ def signup():
         conn.close()
         
         # Redirect to the login page
-        return redirect(url_for('login'))
+        return redirect(url_for('email_verification'))
     
     return render_template('signup.html')
 
@@ -1057,16 +1119,56 @@ def email_verification():
         result = c.fetchone()
         
         if result:
-            user_id = result[0]
-            return render_template('email_verification_success.html', user_id=user_id)
+          user_id = result[0]
+          c.execute('DELETE FROM verifycode WHERE code = ?', (verification_code,))
+          c.execute("INSERT INTO verify (userid, verified) VALUES (?, ?)", (user_id, True))
+          conn.commit()
+          return redirect(url_for('redirecttohome', para1="User Created and Email Verified Complete.", para2="success"))
         else:
-            flash('Invalid verification code')
-            return redirect(url_for('signup'))
+          flash('Invalid verification code')
+          return redirect(url_for('email_verification'))
+
         
         # Close the database connection
         conn.close()
     else:
         return render_template('email_verification.html')
+
+@app.route('/email_resend', methods=['GET', 'POST'])
+def email_resend():
+    if request.method == 'POST':
+        email = request.form['email']
+
+        # Check if the email exists in the users table
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            c = conn.cursor()
+            c.execute("SELECT userid FROM users WHERE email = ?", (email,))
+            result = c.fetchone()
+
+            if not result:
+                flash("Email not found. Please enter a valid email.", "error")
+                return redirect(url_for('email_resend'))
+            else:
+                print(result)
+                userid = result[0]
+
+                # Generate a new verification code
+                new_code = str(random.randint(100000, 999999))
+
+                print(new_code)
+                print(userid)
+
+                # Update the verifycode table with the new code for the specified userid
+                c.execute("UPDATE verifycode SET code = ? WHERE userid = ?", (new_code, userid))
+                conn.commit()
+
+                # Your code here to send the new verification code to the user's email
+
+                flash("A new verification code has been sent to your email.", "success")
+                sendemailtorec(email, new_code)
+                return redirect(url_for('email_verification', userid=userid))
+    
+    return render_template('email_resend.html')
 
 @app.route('/verify_email', methods=['POST'])
 def verify_email():
@@ -1085,7 +1187,7 @@ def verify_email():
         if verification_code == result[0]:
             flash('Email verified successfully')
             # Update the user's email_verified flag in the database
-            c.execute('UPDATE users SET email_verified = 1 WHERE id = ?', (user_id,))
+            c.execute('DELETE FROM verifycode WHERE userid = ?', (user_id,))
             conn.commit()
         else:
             flash('Invalid verification code')
@@ -1119,22 +1221,36 @@ def dashboard():
                 c.execute('SELECT username FROM users WHERE userid = ?', (user_id,))
                 user = c.fetchone()
             
+                now = datetime.utcnow()
                 
+                now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+                
+                c.execute('UPDATE strings SET created = ? WHERE userid = ?', (now_str, user_id))
+
+                conn.commit()
                 
             
                 if user is not None:
+                  c.execute("SELECT userid FROM verify WHERE userid = ?", (user_id,))
+                  verifyed = c.fetchone()
+                  if verifyed is not None:
                     c.execute('SELECT key FROM keys WHERE userid = ?', (user_id,))
                     result = c.fetchone()
                     api_key_str = str(result)
                     api_key = api_key_str.replace("(", "").replace(")", "").replace("'", "").replace(",", "")
-                    return render_template('dashboard.html', username=user[0], result=api_key, requests_left=requests_left)
+                    c.execute('SELECT count FROM requests WHERE userid = ?', (user_id,))
+                    norequestsout = c.fetchone()
+                    norequestsstillout = str(norequestsout)
+                    norequests = norequestsstillout.replace("(", "").replace(")", "").replace("'", "").replace(",", "")
+                    return render_template('dashboard.html', username=user[0], result=api_key, requests_left=requests_left,requests_sent=norequests)
+                  else:
+                     return redirect(url_for('email_verification'))
                 else:
                     flash('User not found')
                     return redirect(url_for('login'))
                 conn.close()  
             else:
                 flash('Invalid authentication')
-        
             # Close the database connection
             conn.close()
             return redirect(url_for('login'))
@@ -1178,8 +1294,40 @@ def admin():
 
 @app.route('/dashboard/settings')
 def settingsdashboard():
+    if 'user_id' in session and 'username' in session and 'token' in session:
+            user_id = session['user_id']
+            username = session['username']
+            auth_string = session['token']
+        
+            # Connect to the users.db database
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+
+            c.execute('SELECT username FROM users WHERE userid = ?', (user_id,))
+            user = c.fetchone()
+
+            now = datetime.utcnow()
+                
+            now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+                
+            c.execute('UPDATE strings SET created = ? WHERE userid = ?', (now_str, user_id))
+
+            conn.commit()
+        
+            # Check if the auth_string matches a string in the strings table
+            c.execute('SELECT userid FROM strings WHERE string = ?', (auth_string,))
+            result = c.fetchone()
+        
+            if result and str(result[0]) == str(user_id):
+                if user is not None:
+                    return render_template('settingdashboard.html')
+                else:
+                    return redirect(url_for('login'))
+            else:
+                return redirect(url_for('login'))
+    else:
+          return redirect(url_for('login'))            
     # Add your logic here to handle the settings page
-    return render_template('settingdashboard.html')
 
 @app.route('/logout')
 def logout():
@@ -1217,7 +1365,10 @@ def delete_account():
     conn.commit()
     c.execute('DELETE FROM Strings WHERE string = ? AND userid = ?', (session['token'], session['user_id']))
     conn.commit()
-
+  
+    c.execute('DELETE FROM keys WHERE userid = ?', (user_id,))
+    conn.commit()
+    c.execute('DELETE FROM verify WHERE userid = ?', (user_id,))
     # Clear session data
     session.clear()
 

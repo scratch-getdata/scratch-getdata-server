@@ -11,6 +11,15 @@
         color: white;
       }
 
+      a {
+        margin: 0;
+        padding: 0;
+        text-decoration: underline;
+        background-color: #222a3b;
+        font-family: 'Fira Code', monospace;
+        color: white;
+      }
+
       .container {
         display: flex;
         justify-content: center;
@@ -76,6 +85,16 @@
         {% if error %}
           <p>{{ error }}</p>
         {% endif %}
+        {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
         <form method="post">
           <label for="username">Username:</label>
           <input type="text" id="username" name="username">

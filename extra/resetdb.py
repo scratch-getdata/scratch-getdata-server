@@ -6,7 +6,7 @@ DATABASE_NAME = 'users.db'
 
 #Settings override
 
-OVERRIDE_SETTINGS_AND_DELETE_ALL = 'false'
+OVERRIDE_SETTINGS_AND_DELETE_ALL = 'true'
 print('OVERRIDE_SETTINGS_AND_DELETE_ALL: ' + OVERRIDE_SETTINGS_AND_DELETE_ALL)
 
 #Settings
@@ -29,6 +29,7 @@ if OVERRIDE_SETTINGS_AND_DELETE_ALL != 'true':
   if DELETE_USERS == 'true':
       print('Deleting users')
       c.execute('DELETE FROM users;')
+      c.execute('DELETE FROM verify;') 
   if DELETE_API_KEYS == 'true':
       print('Deleting api keys')
       c.execute('DELETE FROM keys;')
@@ -45,6 +46,7 @@ else:
   c.execute('DELETE FROM users;')
   c.execute('DELETE FROM verifycode;')
   c.execute('DELETE FROM keys;')
+  c.execute('DELETE FROM verify;') 
   c.execute('DELETE FROM strings;')
 
 

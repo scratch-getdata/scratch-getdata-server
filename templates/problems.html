@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
-    <title>Site Updates</title>
+    <title>Scratch-GetData - Site Issues</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='update.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nonflash.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nospanupdate.css') }}">
@@ -51,9 +51,9 @@
         <a href="/contact/">Contact</a>
     </div>
 
-    <h1 class="headingupdate">Site Updates</h1>
+    <h1 class="headingupdate">Site Issues</h1>
     <br>
-    <h1 class="headingupdate">Click on the update to see details</h1>
+    <h1 class="headingupdate">Report issues to github page link on homepage</h1>
     <br>
     <br>
     <div class="container">
@@ -117,30 +117,34 @@
 
     <script>
 
+function escapeSingleQuotes(text) {
+  return text.replace(/'/g, "\\'");
+}
+
 function updateModalContent(title, modalDetails, outsideModalDetails) {
-    document.getElementById('updateModalTitle').innerText = title;
-    document.getElementById('updateModalBody').innerHTML = modalDetails;
-    document.getElementById('updateModalButton').innerHTML = outsideModalDetails;
+  document.getElementById('updateModalTitle').innerText = title;
+  document.getElementById('updateModalBody').innerHTML = modalDetails;
+  document.getElementById('updateModalButton').innerHTML = outsideModalDetails;
 
-    // Create a new update button
-    var newUpdate = document.createElement('button');
-    newUpdate.setAttribute('type', 'button');
-    newUpdate.setAttribute('class', 'btn btn btn-primary');
-    newUpdate.setAttribute('data-bs-toggle', 'modal');
-    newUpdate.setAttribute('data-bs-target', '#updateModal');
-    newUpdate.setAttribute('onclick', `updateModalContent('${title}', '${modalDetails}', '${outsideModalDetails}')`);
-    newUpdate.innerHTML = `<div class="update">
-                                <h2>${title}</h2>
-                                ${outsideModalDetails}
-                            </div>`;
+  // Create a new update button
+  var newUpdate = document.createElement('button');
+  newUpdate.setAttribute('type', 'button');
+  newUpdate.setAttribute('class', 'btn btn btn-primary');
+  newUpdate.setAttribute('data-bs-toggle', 'modal');
+  newUpdate.setAttribute('data-bs-target', '#updateModal');
+  newUpdate.setAttribute('onclick', `updateModalContent('${escapeSingleQuotes(title)}', '${escapeSingleQuotes(modalDetails)}', '${escapeSingleQuotes(outsideModalDetails)}')`);
+  newUpdate.innerHTML = `<div class="update">
+                              <h2>${title}</h2>
+                              ${outsideModalDetails}
+                          </div>`;
 
-    // Insert the new update at the top of the list
-    var updatesDiv = document.querySelector('.updates');
-    updatesDiv.insertBefore(newUpdate, updatesDiv.firstChild);
+  // Insert the new update at the top of the list
+  var updatesDiv = document.querySelector('.updates');
+  updatesDiv.insertBefore(newUpdate, updatesDiv.firstChild);
 }
 
 function loadUpdates() {
-  fetch('{{ url_for("static", filename="updates.txt") }}')
+  fetch('{{ url_for("static", filename="issue.txt") }}')
     .then(response => response.text())
     .then(text => {
       const lines = text.trim().split('\n');
@@ -157,7 +161,7 @@ function loadUpdates() {
         }
 
         const newUpdateHTML = `
-          <button type="button" class="btn btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateModal" onclick="updateModalContent('${updateName}', '${modalDetails}', '${outsideModalDetails}')">
+          <button type="button" class="btn btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateModal" onclick="updateModalContent('${escapeSingleQuotes(updateName)}', '${escapeSingleQuotes(modalDetails)}', '${escapeSingleQuotes(outsideModalDetails)}')">
               <div class="update">
                   <h2>${updateName}</h2>
                   ${outsideModalDetails}
@@ -169,8 +173,8 @@ function loadUpdates() {
     });
 }
 
-
 loadUpdates();
+
     </script>
     <style>
         .sidebar {
