@@ -2,11 +2,14 @@ from flask import render_template, send_file, request, redirect, session, make_r
 from flask import Flask, jsonify
 from flask import abort
 from flask import url_for
+from flask_sock import Sock
+from flask_socketio import SocketIO, emit, send
 from flask_jwt_extended import create_access_token, jwt_required, decode_token
 from datetime import timedelta, datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_autoindex import AutoIndex
 import json
+from base64 import b64encode
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -16,6 +19,7 @@ import os
 import re
 import time
 import signal
+from threading import Thread
 import sys
 import string
 import random
@@ -50,11 +54,50 @@ for sig in signal.Signals:
     except (OSError, RuntimeError):
         pass
 
-#Required Init
+#Required Settings
+
+server_version = "1.0.1"
+server_channel = "stable"
+
+# Check for updates
+
+def check_for_updates():
+    try:
+        params = {
+            "update": 'scratch-getdata',
+            "channel": server_channel
+        }
+      
+        response = requests.get("https://kokofixcomputers-update-server.kokoiscool.repl.co/check/update", params=params)
+        if response.status_code == 200:
+            update_data = json.loads(response.text)
+            if update_data.get("version"):
+              if update_data.get("version") == server_version:
+                update_status = "UpToDate"
+                latest_version = ""
+                return "uptodate"
+              else:
+                  update_status = "NotUpToDate"
+                  latest_version = update_data.get("version")
+                  return "not-uptodata"
+            else:
+              return "error"
+                
+            return update_data.get("version", "No update information available.")
+        else:
+            return "Unable to fetch update information from the server."
+
+    except Exception as e:
+        return f"An error has occurred while trying to check for updates: {e}"
+
+print(check_for_updates())
 
 #Set timezone
 vancouver_tz = pytz.timezone('America/Vancouver')
 now = datetime.now(vancouver_tz)
+
+def base64(string):
+    return b64encode(string.encode("utf-8")).decode()
 
 
 # Reqire Generate
@@ -69,9 +112,10 @@ def generate_random_string(length):
 
 # init
 
-app = Flask('app')
 app = Flask(__name__)
+sock = Sock(app)
 app.config['JWT_SECRET_KEY'] = '1QGz0JZvqsNJg0Mp2o'  # Change this!
+app.config['SOCK_SERVER_OPTIONS'] = {'ping_interval': 25}
 app.config['JWT_TOKEN_LOCATION'] = ['cookies']
 app.config['JWT_ACCESS_COOKIE_NAME'] = 'Token'
 app.config['JWT_ACCESS_CSRF_HEADER_NAME'] = 'CSRF-TOKEN'
@@ -79,6 +123,7 @@ app.config['JWT_ACCESS_CSRF_FIELD_NAME'] = 'csrf_token'
 app.config['JWT_COOKIE_SECURE'] = True
 app.config['JWT_COOKIE_CSRF_PROTECT'] = True
 app.config['JWT_CSRF_IN_COOKIES'] = True
+app.config['SECRET_KEY'] = 'dumb_secret_key_haha!'
 app.config['JWT_COOKIE_SAMESITE'] = 'Strict'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.abspath('users.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -86,6 +131,8 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 jwt = JWTManager(app)
 
 db = SQLAlchemy(app)
+
+socketio = SocketIO(app, cors_allowed_origins='*')
 
 flask_session_encryption = generate_random_string(15)
 app.secret_key = flask_session_encryption
@@ -240,6 +287,37 @@ def sendemailtorec(recipient_email, verifycode):
 
     print('Verification code sent to ' + recipient_email)
 
+def send_otp_email(email, otp):
+    # Replace the placeholders with your email credentials and settings
+    smtp_server = os.environ['email_server']
+    smtp_port = 587
+    smtp_username = os.environ['email_username']
+    smtp_password = os.environ['email_password']
+    
+    # Create a multipart email message
+    msg = MIMEMultipart()
+    msg['Subject'] = 'OTP Verification'
+    msg['From'] = 'your-email@example.com'
+    msg['To'] = email
+    
+    # Load the email template from a file
+    with open('otp_email_template.html', 'r') as file:
+        template = file.read()
+
+    # Replace the placeholder with the actual OTP
+    email_body = template.replace('{verifycode}', otp)
+    
+    # Create the email body (HTML format)
+    html_part = MIMEText(email_body, 'html')
+    msg.attach(html_part)
+
+    # Connect to the SMTP server and send the message
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.send_message(msg)
+    print("OTP Code sent to" + email)
+
 def create_database():
     # Check if the database file exists
     if not os.path.exists(DATABASE_NAME):
@@ -311,15 +389,29 @@ def check_key():
 
     # If the key is not found, bypass the key check
     if result is None:
-        return render_template('keynotfound.html')
+        c.execute('SELECT * FROM specialAccounts WHERE key = ?', (random_key,))
+        result = c.fetchone()
+        if result is None:
+          return render_template('keynotfound.html')
+        
 
     # Get the user ID from the session
     c.execute('SELECT userid FROM keys WHERE key = ?', (random_key,))
-    user_id = c.fetchone()[0]  # Extract the value from the tuple
+    try:
+      user_id = c.fetchone()[0]  # Extract the value from the tuple
+      specialAccount = 'false'
+    except TypeError:
+      specialAccount = 'true'
+      c.execute('SELECT userid FROM specialAccounts WHERE key = ?', (random_key,))
+      user_id = c.fetchone()[0]
 
 # Update the requests column for the user
-    c.execute('UPDATE requests SET count = (SELECT COALESCE(count, 0) + 1 FROM requests WHERE userid = ?) WHERE userid = ?', (user_id, user_id))
-    conn.commit()
+    if specialAccount == 'true':
+      c.execute('UPDATE specialAccounts SET request = (SELECT COALESCE(request, 0) + 1 FROM specialAccounts WHERE userid = ?) WHERE userid = ?', (user_id, user_id))
+      conn.commit()
+    else:
+      c.execute('UPDATE requests SET count = (SELECT COALESCE(count, 0) + 1 FROM requests WHERE userid = ?) WHERE userid = ?', (user_id, user_id))
+      conn.commit()
 
 # Require Define Functions:
 
@@ -362,14 +454,17 @@ def home():
        return render_template('index.html', message=message)
      else:
        return render_template('index.html', message=message, status=status)
-   
-if app == '__main__':
-   app.run()
+  
 
 @app.route('/settings')
 def settings():
     # Logic for the settings page
     return render_template('settings.html')
+
+@app.route('/otp/email/')
+def otp_email():
+    # Logic for the settings page
+    return render_template('otp_email.html')
 
 @app.route('/redirecttohome')
 def redirecttohome():
@@ -956,7 +1051,8 @@ def restart():
 def internel_error():
   abort(401)
 
-#Testing use
+#Testing use only
+
 
 @app.route("/get/ip/", methods=["GET", "POST"])
 def get_my_ip():
@@ -971,13 +1067,16 @@ def auth_only():
         abort(401)
     return "Authenticated successfully"
 
-#Admin page
+#Accounts
+
+#Accounts and login
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        afterlogin = request.args.get('afterlogin', '').lstrip('/')
         if username != 'admin':
         
         # Connect to the users.db database
@@ -1005,8 +1104,10 @@ def login():
                 c.execute('INSERT INTO strings (userid, string, created) VALUES (?, ?, ?)', (session['user_id'], session['token'], now_str))
                 conn.commit()
                 print('userid: ' + str(session['user_id']) + ' string: ' + session['token'])
-            
-                return redirect(url_for('dashboard'))
+                if afterlogin is not None:
+                  return redirect(url_for(afterlogin))
+                else:
+                  return redirect(url_for('dashboard'))
             else:
                 flash('Invalid username or password')
                 print('Invalid username or password')
@@ -1039,12 +1140,49 @@ def login():
         
     return render_template('login.html')
 
+@app.route("/scratchauth")
+def scratchauth():
+    if "scratchusername" in session:
+        return f"You are {session['scratchusername']}"
+    else:
+        return redirect(f"https://auth.itinerary.eu.org/auth/?redirect={ base64('https://scratch-get-data.kokoiscool.repl.co/scratchauth/verify') }&name=Scratch-GetData")
+
+@app.route("/scratchauth/verify")
+def handle():
+    privateCode = request.args.get("privateCode")
+    
+    if privateCode == None:
+        abort(400)
+
+    resp = requests.get(f"https://auth.itinerary.eu.org/api/auth/verifyToken?privateCode={privateCode}").json()
+    conn = sqlite3.connect(DATABASE_NAME)
+    c = conn.cursor()
+
+    if resp["redirect"] == "https://scratch-get-data.kokoiscool.repl.co/scratchauth/verify":
+        if resp["valid"]:
+            session["scratchusername"] = resp["username"]
+            c.execute('SELECT * FROM specialAccounts WHERE scratchusername = ?', (resp["username"],))
+            result = c.fetchone()
+            if result == None:
+                userid = random.randrange(100000, 1000000)
+                key = secrets.token_hex(16)
+                c.execute('INSERT INTO specialAccounts (userid, signedin, scratchusername, key, request) VALUES (?, ?, ?, ?, ?)', (userid, 'scratchauth', resp["username"], key, "0"))
+
+                conn.commit()
+                return redirect("/dashboard")
+            else:
+                print(resp["username"])
+                return redirect("/dashboard")
+        else:
+            return f"Authentication failed - please try again later."
+    else:
+        return "Invalid Redirect", 400
+
 @app.route('/serverstats')
 def server_status():
     status_message = "All systems are operational"
     last_updated = "July 18, 2023, 8:23 PM"
-    description = "This is the status page for the scratch-getdar"
-    server_version = "1.0.0"
+    description = "This is the status page for the scratch-getdata"
     server_status = "Online"
     now = datetime.utcnow()
     now_str = now.strftime('%Y-%m-%d %H:%M:%S')
@@ -1084,14 +1222,24 @@ def signup():
             # Insert the user ID and verification code into the "verifycode" table
             c.execute('INSERT INTO verifycode (userid, code) VALUES (?, ?)', (user_id, verification_code))
             conn.commit()
+
             
             # Generate a random key for the user
             key = secrets.token_hex(16)
-            
-            # Insert the key into the database
-            c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
-            c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
-            conn.commit()
+          
+            c.execute('SELECT * FROM keys WHERE key = ?', (key,))
+            result = c.fetchone()
+            if result:
+              c.execute('SELECT * FROM keys WHERE key = ?', (key,))
+              result = c.fetchone()
+              c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
+              c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
+              conn.commit()
+            else:
+              c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
+              c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
+              conn.commit()
+        
             
             
             flash('User created successfully')
@@ -1200,40 +1348,35 @@ def verify_email():
 
 @app.route('/dashboard')
 def dashboard():
-    try:
-        if 'user_id' in session and 'username' in session and 'token' in session:
-            user_id = session['user_id']
-            username = session['username']
-            auth_string = session['token']
+    if 'user_id' in session and 'username' in session and 'token' in session:
+        user_id = session['user_id']
+        username = session['username']
+        auth_string = session['token']
+    
+        # Connect to the users.db database
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+    
+        # Check if the auth_string matches a string in the strings table
+        c.execute('SELECT userid FROM strings WHERE string = ?', (auth_string,))
+        result = c.fetchone()
+    
+        if result and str(result[0]) == str(user_id):
+            # Continue with the dashboard logic
         
-            # Connect to the users.db database
-            conn = sqlite3.connect('users.db')
-            c = conn.cursor()
+            # Get the user's data from the users table
+            c.execute('SELECT username FROM users WHERE userid = ?', (user_id,))
+            user = c.fetchone()
         
-            # Check if the auth_string matches a string in the strings table
-            c.execute('SELECT userid FROM strings WHERE string = ?', (auth_string,))
-            result = c.fetchone()
+            now = datetime.utcnow()
+            now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+            c.execute('UPDATE strings SET created = ? WHERE userid = ?', (now_str, user_id))
+            conn.commit()
         
-            if result and str(result[0]) == str(user_id):
-                # Continue with the dashboard logic
-            
-                # Get the user's data from the users table
-                c.execute('SELECT username FROM users WHERE userid = ?', (user_id,))
-                user = c.fetchone()
-            
-                now = datetime.utcnow()
-                
-                now_str = now.strftime('%Y-%m-%d %H:%M:%S')
-                
-                c.execute('UPDATE strings SET created = ? WHERE userid = ?', (now_str, user_id))
-
-                conn.commit()
-                
-            
-                if user is not None:
-                  c.execute("SELECT userid FROM verify WHERE userid = ?", (user_id,))
-                  verifyed = c.fetchone()
-                  if verifyed is not None:
+            if user is not None:
+                c.execute("SELECT userid FROM verify WHERE userid = ?", (user_id,))
+                verifyed = c.fetchone()
+                if verifyed is not None:
                     c.execute('SELECT key FROM keys WHERE userid = ?', (user_id,))
                     result = c.fetchone()
                     api_key_str = str(result)
@@ -1242,23 +1385,51 @@ def dashboard():
                     norequestsout = c.fetchone()
                     norequestsstillout = str(norequestsout)
                     norequests = norequestsstillout.replace("(", "").replace(")", "").replace("'", "").replace(",", "")
-                    return render_template('dashboard.html', username=user[0], result=api_key, requests_left=requests_left,requests_sent=norequests)
-                  else:
-                     return redirect(url_for('email_verification'))
+                    conn.close()
+                    return render_template('dashboard.html', username=user[0], result=api_key, requests_left=requests_left, requests_sent=norequests)
                 else:
-                    flash('User not found')
-                    return redirect(url_for('login'))
-                conn.close()  
+                    conn.close()
+                    return redirect(url_for('email_verification'))
             else:
-                flash('Invalid authentication')
-            # Close the database connection
-            conn.close()
-            return redirect(url_for('login'))
+                conn.close()
+                flash('User not found')
+                return redirect(url_for('login'))
+            
         else:
-          return redirect(url_for('login'))
-    except Exception as e:
-        print(e)
+            conn.close()
+            flash('Invalid authentication')
+            return redirect(url_for('login'))
+            
+    elif 'scratchusername' in session:
+        print('scratchusername found in session')
+        print(session['scratchusername'])
+        print("Finding userid")
+    # Connect to the users.db database
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute("SELECT userid FROM specialAccounts WHERE scratchusername = ?", (session['scratchusername'],))
+        userid = c.fetchone()
+        print("Userid: " + str(userid))
+        conn.close()
+
+        if userid is None:
+            flash('error sign in with scratch user not found')
+
+        else:
+            norequests = ""  # Set a default value here or fetch it from the database if applicable
+            print('result is not none')
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+            c.execute("SELECT key FROM specialAccounts WHERE scratchusername = ?", (session['scratchusername'],))
+            api_key = c.fetchone()
+            api_key_str = str(api_key)
+            api_key = api_key_str.replace("(", "").replace(")", "").replace("'", "").replace(",", "")
+            return render_template('dashboard.html', username=session['scratchusername'], result=api_key, requests_left=requests_left, requests_sent=norequests)
+
+    else:
+        print('no session found redirecting to login')
         return redirect(url_for('login'))
+
   
 @app.route('/admin')
 def admin():
@@ -1292,6 +1463,47 @@ def admin():
         # Redirect the user to the login page with the afterlogin URL parameter
         return redirect(url_for('login', afterlogin='/admin'))
 
+@app.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    if request.method == 'POST':
+        # Handle the form submission and update the password
+        current_password = request.form['currentPassword']
+        new_password = request.form['newPassword']
+        confirm_password = request.form['confirmNewPassword']
+        
+        # Perform password validation and update logic here
+
+        if new_password == confirm_password:
+            password_hash = generate_password_hash(current_password)
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+
+            c.execute('SELECT userid FROM users WHERE password_hash = ?', (password_hash,))
+            result = c.fetchone()
+            if result is not None:
+              password_hash = generate_password_hash(new_password)
+              
+              c.execute("UPDATE users SET password_hash = ? WHERE userid = ?", (password_hash, result))
+              conn.commit()
+
+              session.clear()
+
+              conn.close()
+
+              return redirect(url_for('login'))
+              
+            else:
+              return redirect(url_for('change_password'))
+              flash('Incorrect Current Password')
+            
+        else:
+           return redirect(url_for('home', status='danger', message="Passwords do not match"))
+        # Redirect to a success page or display an error message
+        return redirect(url_for('success'))
+    
+    # Render the change password form
+    return render_template('change_password.html')
+
 @app.route('/dashboard/settings')
 def settingsdashboard():
     if 'user_id' in session and 'username' in session and 'token' in session:
@@ -1322,21 +1534,47 @@ def settingsdashboard():
                 if user is not None:
                     return render_template('settingdashboard.html')
                 else:
-                    return redirect(url_for('login'))
+                    return redirect(url_for('login', afterlogin='/dashboard/settings'))
             else:
                 return redirect(url_for('login'))
+    elif 'scratchusername' in session:
+        print('scratchusername found in session')
+        print(session['scratchusername'])
+        print("Finding userid")
+    # Connect to the users.db database
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute("SELECT userid FROM specialAccounts WHERE scratchusername = ?", (session['scratchusername'],))
+        userid = c.fetchone()
+        print("Userid: " + str(userid))
+        conn.close()
+
+        if userid is None:
+            print('result is none')
+            return redirect(url_for('login'))
+        else:
+            norequests = ""  # Set a default value here or fetch it from the database if applicable
+            print('result is not none')
+            return render_template('settingdashboard.html')
+      
     else:
-          return redirect(url_for('login'))            
+      return redirect(url_for('login'))            
     # Add your logic here to handle the settings page
 
 @app.route('/logout')
 def logout():
+  if 'user_id' in session and 'username' in session and 'token' in session:
     # Remove the token and user ID from the Strings table
     conn = sqlite3.connect(DATABASE_NAME)
     c = conn.cursor()
     c.execute('DELETE FROM Strings WHERE string = ? AND userid = ?', (session['token'], session['user_id']))
     conn.commit()
     conn.close()
+  elif 'scratchusername' in session:
+    session.clear()
+    return redirect(url_for('home'))
+  else:
+    return redirect(url_for('home', message="Error: Cannot logout, No valid session found", status="danger"))
 
     # Clear the session data and redirect to the home page
     session.clear()
@@ -1374,7 +1612,74 @@ def delete_account():
 
     return 'Account deleted successfully'
 
-#Other things and error handlers
+#Websocket to get real time data from the server.
+
+@socketio.on('customname', namespace='/socket.io/websocket')
+def handle_message(message):
+  print('received message: ' + message)
+  send("Recived: " + message)
+
+@socketio.on('connect', namespace='/socket.io/websocket')
+def test_connect():
+  emit('my response', {'data': 'Connected'})
+
+@socketio.on('json', namespace='/socket.io/websocket')
+def handle_json(json):
+  print('received json: ' + str(json))
+  send("Recived: " + message, json=True)
+
+@socketio.on('message', namespace='/socket.io/websocket')
+def handle_message(message):
+  print('received message: ' + message)
+  send("Recived: " + message)
+
+
+@sock.route('/websocket')
+def websocket_handler(ws):
+    try:
+        while True:
+            message = ws.receive()
+            if message is None or message == '!break-connection!':
+                print("breaking websocket because closed")
+                break
+            ws.send(f'Received message: {message}')
+            try:
+                message_data = json.loads(message)
+                if "message" in message_data and "apikey" in message_data:
+                    if message_data["message"] == "getrequests":
+                        api_key = message_data["apikey"]
+                        print(f"Received 'getrequests' message with apikey: {api_key}")
+                        conn = sqlite3.connect('users.db')
+                        c = conn.cursor()
+                        try:
+                            c.execute("SELECT request FROM specialAccounts WHERE key = ?", (api_key,))
+                            request = c.fetchone()
+                            if request is None:
+                              c.execute("SELECT userid FROM keys WHERE key = ?", (api_key,))
+                              userid = c.fetchone()
+                              print(userid)
+                              c.execute("SELECT count FROM requests WHERE userid = ?", (userid,))
+                              request = c.fetchone()
+                              print(request)
+                              ws.send(request)
+                            else:
+                              print(request)
+                              ws.send(request)
+                        except:
+                            c.execute("SELECT userid FROM keys WHERE key = ?", (api_key,))
+                            userid = c.fetchone()
+                            print(userid)
+                            c.execute("SELECT count FROM requests WHERE userid = ?", (userid,))
+                            request = c.fetchone()
+                            print(request)
+                            ws.send(request)
+                            
+            except json.JSONDecodeError:
+                pass
+    except:
+        pass
+
+#Other things and error handlers.
 
 @app.route("/keep-alive/")
 def keep_alive():
@@ -1386,7 +1691,7 @@ def set_server_header():
   
 @app.route('/favicon.ico')
 def favicon():
-    return url_for('static', filename='favicon.png')
+    return send_file('static/favicon.png', mimetype='image/png')
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -1408,9 +1713,11 @@ def page_not_found(e):
 def page_not_found(e):
     return render_template('405.html'), 400
 
-
-app.run(host='0.0.0.0', port=8080)
-
+if __name__ == '__main__':
+    #app.run(host='0.0.0.0', port=8080, debug=True, use_reloader=False)
+    socketio.run(app, host='0.0.0.0', port=8080)
+    
+  
 print(Fore.GREEN + "Flask Ready." + Fore.RESET)
 
 print(Fore.GREEN + "Flask Webserver started" + Fore.RESET)

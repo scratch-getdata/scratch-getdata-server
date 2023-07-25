@@ -10,15 +10,17 @@ OVERRIDE_SETTINGS_AND_DELETE_ALL = 'true'
 print('OVERRIDE_SETTINGS_AND_DELETE_ALL: ' + OVERRIDE_SETTINGS_AND_DELETE_ALL)
 
 #Settings
-
-DELETE_USERS = 'true'
-print('DELETE_USERS: ' + DELETE_USERS)
-DELETE_API_KEYS = 'true'
-print('DELETE_API_KEYS: ' + DELETE_API_KEYS)
-DELETE_VERIFY_CODES = 'true'
-print('DELETE_VERIFY_CODES: ' + DELETE_VERIFY_CODES)
-DELETE_USER_SESSIONS = 'true'
-print('DELETE_USER_SESSIONS: ' + DELETE_USER_SESSIONS)
+if OVERRIDE_SETTINGS_AND_DELETE_ALL != 'true':
+    DELETE_USERS = 'true'
+    print('DELETE_USERS: ' + DELETE_USERS)
+    DELETE_API_KEYS = 'true'
+    print('DELETE_API_KEYS: ' + DELETE_API_KEYS)
+    DELETE_VERIFY_CODES = 'true'
+    print('DELETE_VERIFY_CODES: ' + DELETE_VERIFY_CODES)
+    DELETE_USER_SESSIONS = 'true'
+    print('DELETE_USER_SESSIONS: ' + DELETE_USER_SESSIONS)
+    DELETE_SIGNED_IN_WITH_SCRATCHAUTH_USERS = 'true'
+    print('DELETE_SIGNED_IN_WITH_SCRATCHAUTH_USERS: ' + DELETE_USER_SESSIONS)
 
 
 #Code
@@ -39,6 +41,9 @@ if OVERRIDE_SETTINGS_AND_DELETE_ALL != 'true':
   if DELETE_USER_SESSIONS == 'true':
       c.execute('DELETE FROM strings;')
       print('Deleting user sessions')
+  if DELETE_SIGNED_IN_WITH_SCRATCHAUTH_USERS == 'true':
+      c.execute('DELETE FROM specialAccounts;')
+      print('Deleting Signed in with scratch auth users')
   
 
 else:
@@ -48,6 +53,7 @@ else:
   c.execute('DELETE FROM keys;')
   c.execute('DELETE FROM verify;') 
   c.execute('DELETE FROM strings;')
+  c.execute('DELETE FROM specialAccounts;')
 
 
 print('Commiting changes')
