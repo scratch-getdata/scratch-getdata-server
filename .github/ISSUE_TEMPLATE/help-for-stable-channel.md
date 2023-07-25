@@ -1,8 +1,8 @@
 ---
-name: Help
+name: Help for stable channel
 about: Help
 title: ''
-labels: help
+labels: ''
 assignees: ''
 
 ---
