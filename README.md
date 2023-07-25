@@ -1,6 +1,9 @@
 # scratch-getdata-server
 
-Note: Some code are hidden.
+Note: web scraping code is in another server because it requires access to the scratch page.
+-
+
+Check out the new Wiki: https://github.com/scratch-getdata/scratch-getdata-server/wiki
 -
 
 Scratch getdata is a API for fetching scratch data for more explaination see <a href="https://scratch-get-data.kokoiscool.repl.co/why">here</a>
