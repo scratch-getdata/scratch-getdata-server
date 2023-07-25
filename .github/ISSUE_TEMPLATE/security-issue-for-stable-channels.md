@@ -3,7 +3,7 @@ name: Security issue for stable channels
 about: This is for notifying @kokofixcomputers and maintainers please do not provide
   any details here
 title: ''
-labels: ''
+labels: security
 assignees: kokofixcomputers
 
 ---

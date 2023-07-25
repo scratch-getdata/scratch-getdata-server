@@ -3,7 +3,7 @@ name: Security issue for autoupdate channel
 about: This is for notifying @kokofixcomputers and maintainers please do not provide
   any details here.
 title: ''
-labels: autoupdate-channel
+labels: autoupdate-channel, security
 assignees: ''
 
 ---
