@@ -125,7 +125,8 @@ app.config['JWT_COOKIE_CSRF_PROTECT'] = True
 app.config['JWT_CSRF_IN_COOKIES'] = True
 app.config['SECRET_KEY'] = 'dumb_secret_key_haha!'
 app.config['JWT_COOKIE_SAMESITE'] = 'Strict'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.abspath('users.db')
+DATABASE_PATH_FOR_BLAHBLAH = os.path.abspath('users.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DATABASE_PATH_FOR_BLAHBLAH
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 jwt = JWTManager(app)
