@@ -2,11 +2,12 @@ from Crypto.Hash import SHA256
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 import os
+import time
 import shutil
 
-key = 'super_cool_dump_key'  # Encryption key
-source_file = 'encryption_test/test_output.db'  # Path to the original SQLite database file
-encrypted_file = 'out.db'  # Path to the encrypted SQLite database file (destination file)
+key = os.environ['DATABASE_ENCRYPTION_KEY']  # Encryption key
+source_file = os.path.abspath('users.db')  # Path to the original SQLite database file
+encrypted_file = os.path.abspath('users.db')  # Path to the encrypted SQLite database file (destination file)
 
 
 def encrypt_file():
@@ -62,5 +63,3 @@ def decrypt_file():
 
     print("Decryption completed successfully.")
 
-
-decrypt_file()

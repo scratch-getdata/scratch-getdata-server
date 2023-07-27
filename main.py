@@ -37,6 +37,8 @@ from flask.sessions import SecureCookieSessionInterface
 import hashlib
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_jwt_extended import JWTManager
+import extra.decrypt_database
+import extra.encrypt_database
 
 def signal_handler(signal, frame):
     print("QUIT Signal Recived.")
@@ -45,6 +47,9 @@ def signal_handler(signal, frame):
       conn.close()  
     except:
       print(Fore.RED + "Cannot close database. Database is probably already closed." + Fore.RESET)
+    if reencrypt_database == 'true':
+      print("Encrypting the database")
+      extra.encrypt_database.encrypt_file()
     sys.exit(0)
 
 # Register the signal_handler function to be called only on SIGINT (Ctrl+C)
@@ -54,6 +59,17 @@ for sig in signal.Signals:
     except (OSError, RuntimeError):
         pass
 
+#Decrypt Database
+
+try:
+  print("Loading Database.")
+  extra.decrypt_database.decrypt_file()
+  print("Database has been decrypted!")
+  reencrypt_database = 'true'
+except ValueError:
+  print("Database is not encrypted! loading directly without decrypting.")
+  print(Fore.YELLOW + "Warning: Not encrypting database gives you risk of password, username, api key stolen of your users. To encrypt the database run 'python extra/encrypt_database.py' " + Fore.RESET)
+  pass
 #Required Settings
 
 server_version = "1.0.1"
