@@ -1128,7 +1128,7 @@ def login():
                 c = conn.cursor()
               # Log in the user
                 session['user_id'] = '93304'
-                session['username'] = 'admin'
+                session['username'] = 'admin-required'
                 session['token'] = 'token_' + secrets.token_hex(8)
                 flash('You have successfully logged in')
           
@@ -1136,9 +1136,9 @@ def login():
             # Insert a new row into the strings table
                 now = datetime.utcnow()
 
-                print("Time: " + now)
               
                 c.execute('INSERT INTO strings (userid, string, created) VALUES (?, ?, ?)', (session['user_id'], session['token'], now))
+                conn.commit()
             
                 return redirect(url_for('admin'))
             else:
@@ -1487,25 +1487,34 @@ def admin():
         user_id = session['user_id']
         username = session['username']
         auth_string = session['token']
+
+        if user_id == '93304':
       
-        conn = sqlite3.connect('users.db')
-        c = conn.cursor()
+          conn = sqlite3.connect('users.db')
+          c = conn.cursor()
 
-        c.execute('SELECT userid FROM strings WHERE string = ?', (auth_string,))
-        result = c.fetchone()
+          c.execute('SELECT userid FROM strings WHERE string = ?', (auth_string,))
+          result = c.fetchone()
 
-        conn.close()
+          conn.close()
 
-        if result and str(result[0]) == str(user_id):
+          length_of_result = len(result)
 
-            print(f'session username: {session["username"]}')
-            return render_template('admin.html')
+          if result and str(result[0]) == str(user_id):
+              if length_of_result == '14':
+                if username == 'admin-required':
+                  print(f'session username: {session["username"]}')
+                  return render_template('admin.html')
+              else:
+                redirect(url_for('login', afterlogin='/admin'))
+          else:
+              print('redirecting to login')
+              # Store the URL of the current page in the session
+              session['previous_page'] = request.url
+              # Redirect the user to the login page with the afterlogin URL parameter
+              return redirect(url_for('login', afterlogin='/admin'))
         else:
-            print('redirecting to login')
-            # Store the URL of the current page in the session
-            session['previous_page'] = request.url
-            # Redirect the user to the login page with the afterlogin URL parameter
-            return redirect(url_for('login', afterlogin='/admin'))
+          return redirect(url_for('login', afterlogin='/admin'))
     else:
         print('redirecting to login')
         # Store the URL of the current page in the session
