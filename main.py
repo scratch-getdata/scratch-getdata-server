@@ -1091,8 +1091,12 @@ def login():
             # Log in the user
                 session['user_id'] = user[0]
                 session['username'] = user[1]
-                session['token'] = 'token_' + secrets.token_hex(8)
+                session['token'] = 'token_' + secrets.token_hex(16)
                 flash('You have successfully logged in')
+                c.execute('SELECT * FROM strings WHERE string = ?', (session['token'],))
+                match = c.fetchone()
+                if match is None:
+                  session['token'] = 'token_' + secrets.token_hex(16)
             
             # Insert a new row into the strings table
                 now = datetime.utcnow()
@@ -1105,7 +1109,10 @@ def login():
                 conn.commit()
                 print('userid: ' + str(session['user_id']) + ' string: ' + session['token'])
                 if afterlogin is not None:
-                  return redirect(url_for(afterlogin))
+                  if afterlogin != '':
+                   return redirect(url_for(afterlogin))
+                  else:
+                    return redirect(url_for('dashboard'))
                 else:
                   return redirect(url_for('dashboard'))
             else:
@@ -1344,6 +1351,48 @@ def verify_email():
     conn.close()
     
     return redirect(url_for('login'))
+
+@app.route('/verify_session')
+def session_verify():
+    afterverify = request.args.get("after_success")
+    aftererror = request.args.get("after_error")
+    if 'user_id' in session and 'username' in session and 'token' in session:
+        user_id = session['user_id']
+        username = session['username']
+        auth_string = session['token']
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+      
+        c.execute('SELECT userid FROM strings WHERE string = ?', (auth_string,))
+        result = c.fetchone()
+
+        if result and str(result[0]) == str(user_id):
+          c.execute('SELECT username FROM users WHERE userid = ?', (user_id,))
+          user = c.fetchone()
+          if user is not None:
+            return redirect(url_for(afterverify))
+          else:
+            return redirect(url_for(aftererror))
+        else:
+          return redirect(url_for(aftererror))
+
+    elif 'scratchusername' in session:
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute("SELECT userid FROM specialAccounts WHERE scratchusername = ?", (session['scratchusername'],))
+        userid = c.fetchone()
+        print("Userid: " + str(userid))
+        conn.close()
+
+        if userid is None:
+          return redirect(url_for(aftererror))
+        else:
+          return redirect(url_for(afterverify))
+
+    else:
+      return redirect(url_for(aftererror))
+
+  
     
 
 @app.route('/dashboard')
