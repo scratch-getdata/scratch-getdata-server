@@ -81,8 +81,8 @@ except ValueError:
   pass
 #Required Settings
 
-server_version = "1.0.1"
-server_channel = "stable"
+server_version = "1.0.2"
+server_channel = "autoupdate"
 
 # Check for updates
 
@@ -100,11 +100,14 @@ def check_for_updates():
               if update_data.get("version") == server_version:
                 update_status = "UpToDate"
                 latest_version = ""
+                time.sleep(1)
+                print("Server version: " + server_version)
+                print("Latest Version: " + update_data.get("version"))
                 return "uptodate"
               else:
                   update_status = "NotUpToDate"
                   latest_version = update_data.get("version")
-                  return "not-uptodata"
+                  return "not-uptodate"
             else:
               return "error"
                 
