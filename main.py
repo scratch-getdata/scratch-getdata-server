@@ -323,7 +323,7 @@ def send_otp_email(email, otp):
     # Create a multipart email message
     msg = MIMEMultipart()
     msg['Subject'] = 'OTP Verification'
-    msg['From'] = 'your-email@example.com'
+    msg['From'] = 'kokocanfixit@kokofixcomputers.serv00.net'
     msg['To'] = email
     
     # Load the email template from a file
@@ -397,47 +397,86 @@ def handle_auth_error(e):
 
 @app.before_request
 def check_key():
-  if '/get' in request.path:
-    # Get the random key from the query string
-    random_key = request.args.get('key')
+    if '/get' in request.path:
+        # Get the random key from the query string
+        random_key = request.args.get('key')
 
-    # Connect to SQLite database
-    conn = sqlite3.connect('users.db')
+        # Connect to SQLite database
+        conn = sqlite3.connect('users.db')
 
-    # Bypass the key check if random_key is None
-    if random_key is None:
-        return render_template('nokeyprovided.html')
+        # Bypass the key check if random_key is None
+        if random_key is None:
+            return render_template('nokeyprovided.html')
 
-    # Check if the key is in the database
-    c = conn.cursor()
-    c.execute('SELECT * FROM keys WHERE key = ?', (random_key,))
-    result = c.fetchone()
-
-    # If the key is not found, bypass the key check
-    if result is None:
-        c.execute('SELECT * FROM specialAccounts WHERE key = ?', (random_key,))
+        # Check if the key is in the database
+        c = conn.cursor()
+        c.execute('SELECT * FROM keys WHERE key = ?', (random_key,))
         result = c.fetchone()
+
+        # If the key is not found, bypass the key check
         if result is None:
-          return render_template('keynotfound.html')
-        
+            c.execute('SELECT * FROM specialAccounts WHERE key = ?', (random_key,))
+            result = c.fetchone()
+            if result is None:
+                return render_template('keynotfound.html')
 
-    # Get the user ID from the session
-    c.execute('SELECT userid FROM keys WHERE key = ?', (random_key,))
-    try:
-      user_id = c.fetchone()[0]  # Extract the value from the tuple
-      specialAccount = 'false'
-    except TypeError:
-      specialAccount = 'true'
-      c.execute('SELECT userid FROM specialAccounts WHERE key = ?', (random_key,))
-      user_id = c.fetchone()[0]
+        # Get the user ID from the session
+        c.execute('SELECT userid FROM keys WHERE key = ?', (random_key,))
+        try:
+            user_id = c.fetchone()[0]  # Extract the value from the tuple
+            specialAccount = 'false'
+        except TypeError:
+            specialAccount = 'true'
+            c.execute('SELECT userid FROM specialAccounts WHERE key = ?', (random_key,))
+            user_id = c.fetchone()[0]
 
-# Update the requests column for the user
-    if specialAccount == 'true':
-      c.execute('UPDATE specialAccounts SET request = (SELECT COALESCE(request, 0) + 1 FROM specialAccounts WHERE userid = ?) WHERE userid = ?', (user_id, user_id))
-      conn.commit()
-    else:
-      c.execute('UPDATE requests SET count = (SELECT COALESCE(count, 0) + 1 FROM requests WHERE userid = ?) WHERE userid = ?', (user_id, user_id))
-      conn.commit()
+        # Get the current date in 'YYYY-MM-DD' format
+        now = datetime.utcnow()
+        now_str = now.strftime('%Y-%m-%d')
+
+        if specialAccount == 'true':
+            # Update the requests column in specialAccounts table
+            c.execute('UPDATE specialAccounts SET request = (SELECT COALESCE(request, 0) + 1 FROM specialAccounts WHERE userid = ?) WHERE userid = ?', (user_id, user_id))
+            conn.commit()
+
+            # Check if there is an entry for the current date in request_count_scratch
+            c.execute('SELECT requests_count FROM request_count_scratch WHERE userid = ? AND date = ?', (user_id, now_str))
+            current_requests_count = c.fetchone()
+
+            if current_requests_count:
+                # If an entry exists for the current date, update the count
+                current_count = current_requests_count[0]
+                new_count = current_count + 1
+                c.execute('UPDATE request_count_scratch SET requests_count = ? WHERE userid = ? AND date = ?', (new_count, user_id, now_str))
+                conn.commit()
+            else:
+                # If no entry exists for the current date, insert a new row
+                c.execute('INSERT INTO request_count_scratch (userid, date, requests_count) VALUES (?, ?, 1)', (user_id, now_str))
+                conn.commit()
+
+        else:
+            # Update the count column in requests table
+            c.execute('UPDATE requests SET count = (SELECT COALESCE(count, 0) + 1 FROM requests WHERE userid = ?) WHERE userid = ?', (user_id, user_id))
+            conn.commit()
+
+            # Check if there is an entry for the current date in request_chart
+            c.execute('SELECT requests_count FROM request_chart WHERE userid = ? AND date = ?', (user_id, now_str))
+            current_requests_count = c.fetchone()
+
+            if current_requests_count:
+                # If an entry exists for the current date, update the count
+                current_count = current_requests_count[0]
+                new_count = current_count + 1
+                c.execute('UPDATE request_chart SET requests_count = ? WHERE userid = ? AND date = ?', (new_count, user_id, now_str))
+                conn.commit()
+            else:
+                # If no entry exists for the current date, insert a new row
+                c.execute('INSERT INTO request_chart (userid, date, requests_count) VALUES (?, ?, 1)', (user_id, now_str))
+                conn.commit()
+
+        conn.close()
+
+
 
 # Require Define Functions:
 
@@ -1421,33 +1460,34 @@ def session_verify():
   
     
 
+
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' in session and 'username' in session and 'token' in session:
         user_id = session['user_id']
         username = session['username']
         auth_string = session['token']
-    
+
         # Connect to the users.db database
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
-    
+
         # Check if the auth_string matches a string in the strings table
         c.execute('SELECT userid FROM strings WHERE string = ?', (auth_string,))
         result = c.fetchone()
-    
+
         if result and str(result[0]) == str(user_id):
             # Continue with the dashboard logic
-        
+
             # Get the user's data from the users table
             c.execute('SELECT username FROM users WHERE userid = ?', (user_id,))
             user = c.fetchone()
-        
+
             now = datetime.utcnow()
             now_str = now.strftime('%Y-%m-%d %H:%M:%S')
             c.execute('UPDATE strings SET created = ? WHERE userid = ?', (now_str, user_id))
             conn.commit()
-        
+
             if user is not None:
                 c.execute("SELECT userid FROM verify WHERE userid = ?", (user_id,))
                 verifyed = c.fetchone()
@@ -1460,8 +1500,20 @@ def dashboard():
                     norequestsout = c.fetchone()
                     norequestsstillout = str(norequestsout)
                     norequests = norequestsstillout.replace("(", "").replace(")", "").replace("'", "").replace(",", "")
+
+                    # Fetch data for the user from the request_chart table
+                    c.execute('SELECT date, requests_count FROM request_chart WHERE userid = ?', (user_id,))
+                    data = c.fetchall()
+                    dates = [row[0] for row in data]
+                    requests_count = [row[1] for row in data]
+
                     conn.close()
-                    return render_template('dashboard.html', username=user[0], result=api_key, requests_left=requests_left, requests_sent=norequests)
+
+                    # Convert lists to JSON format
+                    dates_json = json.dumps(dates)
+                    requests_count_json = json.dumps(requests_count)
+
+                    return render_template('dashboard.html', username=user[0], result=api_key, requests_left=requests_left, requests_sent=norequests, datas=dates_json, requests_count=requests_count_json)
                 else:
                     conn.close()
                     return redirect(url_for('email_verification'))
@@ -1469,17 +1521,17 @@ def dashboard():
                 conn.close()
                 flash('User not found')
                 return redirect(url_for('login'))
-            
+
         else:
             conn.close()
             flash('Invalid authentication')
             return redirect(url_for('login'))
-            
+
     elif 'scratchusername' in session:
         print('scratchusername found in session')
         print(session['scratchusername'])
         print("Finding userid")
-    # Connect to the users.db database
+        # Connect to the users.db database
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
         c.execute("SELECT userid FROM specialAccounts WHERE scratchusername = ?", (session['scratchusername'],))
@@ -1499,7 +1551,20 @@ def dashboard():
             api_key = c.fetchone()
             api_key_str = str(api_key)
             api_key = api_key_str.replace("(", "").replace(")", "").replace("'", "").replace(",", "")
-            return render_template('dashboard.html', username=session['scratchusername'], result=api_key, requests_left=requests_left, requests_sent=norequests)
+
+            # Fetch data for the user from the request_chart table
+            c.execute('SELECT date, requests_count FROM request_chart_scratch WHERE userid = ?', (userid,))
+            data = c.fetchall()
+            dates = [row[0] for row in data]
+            requests_count = [row[1] for row in data]
+
+            conn.close()
+
+            # Convert lists to JSON format
+            dates_json = json.dumps(dates)
+            requests_count_json = json.dumps(requests_count)
+
+            return render_template('dashboard.html', username=session['scratchusername'], result=api_key, requests_left=requests_left, requests_sent=norequests, datas=dates_json, requests_count=requests_count_json)
 
     else:
         print('no session found redirecting to login')
@@ -1662,7 +1727,8 @@ def logout():
 
     # Clear the session data and redirect to the home page
     session.clear()
-    return redirect(url_for('home'))
+  return redirect(url_for('home', message="You have been successfully loged out", status="success"))
+  
 
 @app.route('/update_updates', methods=['POST'])
 def update_updates():
