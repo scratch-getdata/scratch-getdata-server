@@ -50,6 +50,10 @@ def signal_handler(signal, frame):
     if reencrypt_database == 'true':
       print("Encrypting the database")
       extra.encrypt_database.encrypt_file()
+    else:
+      print("Leaving Database Unencrypted")
+
+    print("Gracefully shutdown complete.")
     sys.exit(0)
 
 # Register the signal_handler function to be called only on SIGINT (Ctrl+C)
