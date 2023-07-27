@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Updates</title>
+</head>
+<body>
+    <h1>Site Updates</h1>
+    <div class="container">
+        <div id="updatesContainer" class="updates">
+            <!-- Updates will be appended here -->
+        </div>
+    </div>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal" id="updateModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title" id="updateModalTitle">Update Title</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body" id="updateModalBody">
+                    Update details go here.
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadUpdates() {
+            const response = await fetch('{{ url_for("static", filename="updates.txt") }}');
+            const text = await response.text();
+            const updates = text.split('\n\n');
+            const updatesContainer = document.getElementById('updatesContainer');
+
+            updates.forEach((update, index) => {
+                const [updateName, modalDetails, outsideModalDetails] = update.split('\n');
+                const updateButton = document.createElement('button');
+                updateButton.type = 'button';
+                updateButton.className = 'btn btn-secondary';
+                updateButton.dataset.bsToggle = 'modal';
+                updateButton.dataset.bsTarget = '#updateModal';
+                updateButton.onclick = () => updateModalContent(updateName, modalDetails);
+
+                const updateDiv = document.createElement('div');
+                updateDiv.className = 'update';
+                const updateTitle = document.createElement('h2');
+                updateTitle.innerText = updateName;
+                const updateDetails = document.createElement('p');
+                updateDetails.innerText = outsideModalDetails;
+                updateDiv.appendChild(updateTitle);
+                updateDiv.appendChild(updateDetails);
+                updateButton.appendChild(updateDiv);
+
+                updatesContainer.appendChild(updateButton);
+            });
+        }
+
+        function updateModalContent(title, content) {
+            document.getElementById('updateModalTitle').innerText = title;
+            document.getElementById('updateModalBody').innerHTML = content;
+        }
+
+        loadUpdates();
+    </script>
+</body>
+</html>

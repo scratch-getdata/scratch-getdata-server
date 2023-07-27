@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch-GetData - API Docs</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz4fnFO9gybBud7M4JtFq9rL4p6lE0M0r1lZ3GgK8uSfG4kxMh/0f5hU5I" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl5/6en8XCp+HHAAK5GSLf2xlYtvJ8U2Q4U+9cuEnJoa3" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nospan.css') }}">
+    <script>
+        function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+        }
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark custom-navbar">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Scratch-GetData</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <button class="btn btn-outline-secondary" onclick="openNav()">
+                            <i class="bi bi-list"></i> More
+                        </button>
+                                </li>
+          <li class="nav-item">
+            <a class="btn btn-primary" href="/signup">Signup</a>
+          </li>
+          <li class="nav-item">
+            <a class="btn btn-primary" href="/login">Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="btn btn-primary" href="/dashboard">Dashboard</a>
+          </li>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="../">Home</a>
+        <a href="#">Docs</a>
+        <a href="../updates">Updates <span class="badge bg-warning">Beta</span></a>
+        <a href="/why">Why Getdata and what is</a>
+        <a href="/install">Install</a>
+        <a href="/python/docs/">Python Module Docs</a>
+        <a href="/issue/">Issues <span class="badge bg-warning">Beta</span></a>
+        <a href="/contact/">Contact</a>
+    </div>
+
+    <div class="content">
+<h1 id="home">Welcome to Scratch GetData</h1>
+
+<br>
+<br>
+
+<h3>If you use Scratch GetData please credit @kokofixcomputers on scratch</h3>
+
+<br>
+<br>
+
+<h2>IMPORTANT: You can get the api key from the dashboard after you signup.<br> To use the api key you can add a key parameter like this :</h2>
+<br>
+      <center><div class="example">
+
+        <p>https://scratch-get-data.kokoiscool.repl.co/get/user/user-exist/(username)?key=(your api key)</p>
+
+      </div></center>
+<br>
+<br>
+<center>
+<h6>This is an API for Scratch, use this API to get scratch stuffs like users following count on servers banned from scratch api. This is mainly made for scratchattach backend code.</h6>
+
+<br>
+<br>
+
+<h6>Warning: Do not use any of those and let your program go okay so this does not return something that must means the (whatever (username, etc)) does not exist for the users there is one that you can see if a user exists look for that even in projects and many more.</h6>
+
+<h6 id="disclaimer">Disclamer:
+  Everything you see here may be OUTDATED because this uses ScratchDB and some from Explodingstar which is more up to date</h6>
+</center>
+<br>
+<br>
+<br>
+
+<h2 id="processed-data">Processed Data</h4>
+<br>
+<br>
+<p>"Processed Data" are data that are processed so for example messages will return the number instead of the json: {"messages":"0"} making it easier for your project</p>
+
+<br>
+<br>
+<br>
+<h2 id="users">Users</h2>
+<p>Note: You will have to replace (username) with the real scratch username
+
+<br>
+<br>
+<p>See if the user exist.</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/user/user-exist/(username)/</p>
+
+      </div></center>
+            
+<br>
+<br>
+<p>Get the What I'm Working On Section</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/wiwo/(username)</p>
+
+      </div></center
+<br>
+<br>
+
+<p>Get the Country</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/user/country/(username)</p>
+
+      </div></center
+
+<br>
+<br>
+
+<p>Get the image profile picture</p>
+<p>Sizes: <br> 32x32 <br> 50x50 <br> 55x55 <br> 60x60 <br> 90x90 <br> Note: You will also have to put in the x in the url</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/user/profilepic/(sizes)/(username)/</p>
+
+      </div></center>
+
+<br>
+<br>
+
+<p>Get the About Me Section</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/aboutme/(username)</p>
+
+      </div></center
+
+<br>
+<br>
+
+<p>Get the Follower Count</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/follower-count/(username)</p>
+
+      </div></center
+
+<br>
+<br>
+
+<p>Get the Following Count</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/following-count/(username)</p>
+
+      </div></center
+
+<br>
+<br>
+
+<p>Get the Messages Count</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/messages/(username)</p>
+
+      </div></center
+
+<br>
+<br>
+
+<p>Get the Scratcher Status (Returns True if is scratcher and false if is new scratcher)</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/is_scratcher/(username)</p>
+
+      </div></center>
+<br>
+<br>
+<br>
+<br>
+<br>
+<h2 id="projects">Projects</h2>
+<p>Note: You will have to replace (projectid) with the real scratch projectid
+<br>
+<br>
+
+
+<p>Get the project's creator</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/project/creator/(projectid)</p>
+
+      </div></center>
+
+<br>
+<br>
+
+
+<p>Get the project's Instuctions</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/project/instructions/(projectid)</p>
+
+      </div></center>
+
+
+<br>
+<br>
+
+
+<p>Get the project's Notes and credits</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/project/notes_and_credits/(projectid)</p>
+
+      </div></center>
+
+<br>
+<br>
+
+
+<p>Get the project's blocks count</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/project/blocks/(projectid)</p>
+
+      </div></center>
+
+<br>
+<br>
+<br>
+<br>
+<h2 id="studio">Studio</h2>
+<p>Note: You will have to replace (studioid) with the real scratch Studioid
+<br>
+<br>
+
+<p>Get the studio's title</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/studio/title/(studioid)</p>
+
+      </div></center>
+
+<br>
+<br>
+
+<p>Get the studio's managers count</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/studio/count_managers/(studioid)</p>
+
+      </div></center>
+
+<br>
+<br>
+<br>
+<br>
+<h2 id="forum">Forum</h2>
+<p>Note: You will have to replace (forumid) with the real scratch Forumid
+<br>
+<br>
+
+<br>
+<br>
+
+
+<p>Get forum title</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/forum/title/(forumid)</p>
+
+      </div></center>
+
+<br>
+<br>
+
+
+<p>Get forum category</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/forum/category/(forumid)</p>
+
+      </div></center>
+
+<br>
+<br>
+<br>
+<br>
+<h2 id="ocular">Ocular</h2>
+<p>Note: You will have to replace (username, forumid, etc) with the real scratch username,forum id, etc
+<br>
+<br>
+
+<br>
+<br>
+
+<p>Get the ocular status</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/ocular/user/status/(username)</p>
+
+      </div></center>
+
+<br>
+<br>
+
+<p>Get the ocular color</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/ocular/user/color/(username)</p>
+
+      </div></center>
+
+<br>
+<br>
+
+<p>Get the ocular update time</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/ocular/user/updated_time/(username)</p>
+
+      </div></center>
+
+
+<br>
+<br>
+<br>
+
+<h2 id="non-processed-data">Non-Processed Data</h4>
+<br>
+<br>
+<p>"Non-Processed Data" means that you can a whole bunch of data and you will have to extract them out yourself</p>
+
+<br>
+<br>
+<br>
+<br>
+<h2 id="non-user">User</h2>
+<p>Note: You will have to replace username with the real scratch username
+<br>
+
+  <br>
+
+<p>Get user</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/user/non-processed/(username)</p>
+
+      </div></center>
+
+
+<br>
+<br>
+<br>
+<br>
+<h2 id="non-user">Projects</h2>
+<p>Note: You will have to replace projectid with the real scratch project id
+<br>
+
+  <br>
+
+<p>Get project</p>
+      <center><div class="example">
+
+        <p>GET https://scratch-get-data.kokoiscool.repl.co/get/project/non-processed/(projectid)</p>
+
+      </div></center>
+
+<br>
+<br>
+<br>
+
+<br>
+<br>
+
+              
+<h4 id="credits">Credits: <br>
+  ScratchForGetData for data (run by @kokofixcomputers) (Most accurate) <br>
+  Scratch API for return format <br>
+    ScratchDB for Data <br>
+  Explodingstar for Data <br>
+  TimMcCool for CSS Styling
+</h4>
+
+</div>
+
+<p id="contact">See @kokofixcomputers at:</p>
+
+<a href="https://github.com/kokofixcomputers/Scratch-getdata" class="icon-link">
+  <img src="{{ url_for('static', filename='github.png') }}" alt="GitHub" class="icon">
+  GitHub
+</a> |
+<a href="https://replit.com/@iceylogo" class="icon-link">
+  <img src="{{ url_for('static', filename='replit.webp') }}" alt="Replit" class="icon">
+  Replit
+</a> |
+<a href="https://replit.com/@kokofixcomputers" class="icon-link">
+  <img src="{{ url_for('static', filename='replit.webp') }}" alt="Replit" class="icon">
+  Replit (Account 2)
+</a> |
+<a href="https://scratch.mit.edu/kokofixcomputers" class="icon-link">
+  <img src="{{ url_for('static', filename='scratch.ico') }}" alt="Scratch" class="icon">
+  Scratch
+</a> |
+
+    </div>
+
+    <style>
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            right: 0;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 60px;
+        }
+
+        .sidebar a {
+            padding: 8px 8px 8px 16px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #000;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #007bff;
+        }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        .content {
+            transition: margin-right .3s;
+            padding: 16px;
+        }
+
+        @media screen and (max-height: 450px) {
+            .sidebar {padding-top: 15px;}
+            .sidebar a {font-size: 18px;}
+        }
+    </style>
+</body>
+</html>
+

@@ -1,0 +1,3 @@
+Known Issues
+Updates Page: <br> For long updates the other updates don't show what their supposed to show
+Please Click here to see the details.

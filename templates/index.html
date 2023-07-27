@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch-GetData</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz4fnFO9gybBud7M4JtFq9rL4p6lE0M0r1lZ3GgK8uSfG4kxMh/0f5hU5I" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl5/6en8XCp+HHAAK5GSLf2xlYtvJ8U2Q4U+9cuEnJoa3" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nospan.css') }}">
+</head>
+<body>
+  <div class="alert alert-{{status}} alert-dismissible">
+   {{ message }}
+</div>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light custom-navbar" data-bs-theme="dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Scratch-GetData</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" data-bs-theme="dark" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <button class="btn btn-outline-secondary" onclick="openNav()">
+              <i class="bi bi-list"></i> More
+            </button>
+          </li>
+          <li class="nav-item">
+            <a class="btn btn-primary" href="/signup">Signup</a>
+          </li>
+          <li class="nav-item">
+            <a class="btn btn-primary" href="/login">Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="btn btn-primary" href="/dashboard">Dashboard</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="updates" id="updatesContainer">
+      <!-- Updates will be added here -->
+    </div>
+  </div>
+
+  <!-- Bootstrap Modal -->
+  <div class="modal" id="updateModal" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title" id="updateModalTitle">Update Title</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body" id="updateModalBody">
+          Update details go here.
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openNav() {
+      document.getElementById("mySidebar").style.width = "250px";
+    }
+
+    function closeNav() {
+      document.getElementById("mySidebar").style.width = "0";
+    }
+
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function applyDarkMode() {
+      document.body.classList.add('dark-mode');
+      const navbar = document.querySelector('.navbar');
+      navbar.classList.remove('navbar-light');
+      navbar.classList.add('navbar-dark');
+    }
+
+    function removeDarkMode() {
+      document.body.classList.remove('dark-mode');
+      const navbar = document.querySelector('.navbar');
+      navbar.classList.remove('navbar-dark');
+      navbar.classList.add('navbar-light');
+    }
+
+    if (darkModeMediaQuery.matches) {
+      applyDarkMode();
+    } else {
+      removeDarkMode();
+    }
+
+    darkModeMediaQuery.addEventListener('change', (event) => {
+      if (event.matches) {
+        applyDarkMode();
+      } else {
+        removeDarkMode();
+      }
+    });
+  </script>
+
+<div id="mySidebar" class="sidebar">
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+  <a href="../">Home</a>
+  <a href="/docs">Docs</a>
+  <a href="/updates">Updates <span class="badge bg-warning">Beta</span></a>
+  <a href="/why">Why Getdata and what is</a>
+  <a href="/install">Install</a>
+  <a href="/python/docs/">Python Module Docs</a>
+  <a href="/issue/">Issues <span class="badge bg-warning">Beta</span></a>
+  <a href="/contact/">Contact</a>
+</div>
+
+<script>
+  const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function applyDarkMode() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.add('bg-dark');
+    sidebar.classList.add('text-white');
+  }
+
+  function removeDarkMode() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.remove('bg-dark');
+    sidebar.classList.remove('text-white');
+  }
+
+  function updateTheme() {
+    if (darkModeMediaQuery.matches) {
+      applyDarkMode();
+    } else {
+      removeDarkMode();
+    }
+  }
+
+  updateTheme();
+
+  darkModeMediaQuery.addEventListener('change', updateTheme);
+</script>
+
+  <h1>Welcome to Scratch-Getdata</h1>
+  <br>
+  <br>
+  <h4>Please credit "kokofixcomputers on scratch" if you use.</h4>
+  <br>
+  <br>
+  <h4>Please check out the github and report and problems and suggestions there. <a class="underlined-text"href="https://github.com/scratch-getdata/scratch-getdata-server">link</a></h4>
+  <br>
+  <br>
+  <h4>Python module now avalable install using: <br> "pip install scratch-getdata" <br> More info and how to use <a class="underlined-text" href="https://pypi.org/project/scratch-getdata/">here</a> </h4>
+  <br>
+  <br>
+  <h4>Use the sidebar to select a page</h4>
+  <h4>Click more at the top to open sidebar</h4>
+  <br>
+  <h4>Suggest any features <a class="underlined-text" href="https://github.com/scratch-getdata/scratch-getdata-server/issues">here</a></h4>
+  <br>
+  <br>
+  <br>
+  <h3>
+    What is "Scratch-GetData"?
+  </h3>
+  <br>
+  <h4>
+    "Scratch-GetData" is a api alternative to scratchdb it is mainly made for scratchattach projects and on servers that got banned by scratch you can use this instead of scratch api to fetch scratch data. See why and more <a class="underlined-text href="/why">here</a>
+  </h4>
+
+    <style>
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            right: 0;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 60px;
+        }
+
+        .sidebar a {
+            padding: 8px 8px 8px 16px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #000;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #007bff;
+        }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        .content {
+            transition: margin-right .3s;
+            padding: 16px;
+        }
+
+        @media screen and (max-height: 450px) {
+            .sidebar {padding-top: 15px;}
+            .sidebar a {font-size: 18px;}
+        }
+    </style>
+</body>
+</html>
+

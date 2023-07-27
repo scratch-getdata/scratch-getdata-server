@@ -1,0 +1,33 @@
+Update (Test)
+Test
+Test
+
+
+
+Update (2023-Jul-16)
+Please remember to credit @kokofixcomputers this is a very big update <br> <br> 🆕 New Features and Improvements: <br> Added New Dashboard <br> Added Email Sending <br> Added account deletion <br> Added sha256 password hashing <br> Scratch-GetData now have Zero-Knowledge security <br> Fixed email link <br> <br> 🐛 Bug Fixes: <br> Fixed Login
+This is a very big update! <br> <br> Please see details by clicking here
+
+
+
+Update (2023-Jul-14)
+🆕 New Features and Improvements: <br> Added New GitHub Links <br> Added title to error pages <br> Added a example box in Python Module Docs <br> <br> 🐛 Bug Fixes: <br> Fixed Python Module Docs page not appearing on updates page
+Please see details by clicking here
+
+
+
+Update (2023-Jul-13)
+🆕 New Features and Improvements: <br> Fixed some Grammar issues <br> Added Python Module Docs page
+Please see details by clicking here
+
+
+
+Update (2023-Jul-10)
+🆕 New Features and Improvements: <br> Added Beta badge in sidebar at updates <br> <br> 🐛 Bug Fixes: <br> fixed typo on sidebar in updates
+Please see details by clicking here
+
+
+
+Update (2023-Jul-9)
+🆕 New Features: <br> Added Updates Page <br> Added Sidebar <br> Added Dark Theme to updates <br> <br> 🐛 Bug Fixes: <br> Fixed is_scratcher
+Added Update Page <br> Added Sidebar <br> Fixed is_scratcher

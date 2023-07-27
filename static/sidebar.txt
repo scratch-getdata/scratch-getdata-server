@@ -1,0 +1,4 @@
+Home
+Docs
+Updates {tag=beta}
+foo {url=/foo1}

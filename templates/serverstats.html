@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Server Status</title>
+  <link rel="stylesheet" type="text/css" href="/static/style.css">
+  <style>
+    .checkmark {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      animation: checkmark-animation 0.3s ease-in-out infinite;
+    }
+
+    @keyframes checkmark-animation {
+      0% {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="main">
+    <div class="custom-navbar">
+      <h1 class="navbar-brand">Server Status</h1>
+    </div>
+      <h1>
+        Status: 
+        {% if status_message == "All systems are operational" %}
+          <span class="allOk">
+            {{ status_message }} 
+            <span class="checkmark"></span>
+          </span>
+        {% else %}
+          {{ status_message }}
+        {% endif %}
+      </h1>
+      <h3>Last updated: <span>{{ last_updated }}</span></h3>
+      <center><h6 class="underlined-text">Server Version: {{ server_version }}</h6></center>
+      <center><h6 class="underlined-text">Server Status: {{ server_status }}</h6></center>
+      <center><h6 class="underlined-text">Server Time: {{ server_time }}</h6></center>
+      <center><h6 class="underlined-text">{{ description }}</h6></center>
+  </div>
+</body>
+
+</html>

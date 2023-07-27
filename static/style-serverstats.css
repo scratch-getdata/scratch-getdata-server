@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
+body {
+  margin: 1vw;
+  background-color: #222a3b;
+  font-family: 'Fira Code', monospace;
+  color: white;
+  padding: 2vw;
+  text-align: center;
+  font-weight: normal;
+}
+
+.custom-navbar {
+  background-color: #384154 !important;
+  display: flex;
+  align-items: center;
+  width: 100% !important;
+  margin: 0;
+}
+
+.custom-navbar .navbar-brand {
+  margin: 0;
+}
+
+.main {
+  text-align: center;
+}
+
+.example {
+  border-radius: 0.8vw;
+  background-color: #384154;
+  padding: 2vw;
+  width: 39rem;
+  font-family: 'Fira Code', monospace;
+}
+
+h1 {
+  font-size: 5rem;
+  color: white;
+  font-weight: 500;
+  text-shadow: 2px 2px 60px blue;
+  animation-name: backgroundColorPalette;
+  animation-duration: 5s;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-timing-function: linear; 
+}
+
+h3 {
+  margin-top: -3rem;
+}
+
+h6 {
+  font-size: 1.5rem;
+  margin-top: 4vw;
+  width: 70vw;
+  text-align: center;
+}
+
+.underlined-text {
+  text-decoration: underline;
+}
+
+.allOk {
+  font-size: 3rem;
+  margin-top: 7rem;
+  margin-bottom: 0.5rem;
+}
+
+span {
+  animation-name: backgroundColorPalette2;
+  animation-duration: 5s;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-timing-function: linear; 
+}
+
+.checkmark {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  animation: checkmark-animation 0.3s ease-in-out infinite;
+}
+
+@keyframes checkmark-animation {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes backgroundColorPalette {
+  0% {
+    color: #ee6055;
+    text-shadow: 2px 2px 60px #ee6055;
+  }
+  25% {
+    color: #60d394;
+    text-shadow: 2px 2px 60px #60d394;
+  }
+  50% {
+    color: #aaf683;
+    text-shadow: 2px 2px 60px #aaf683;
+  }
+  75% {
+    color: #ffd97d;
+    text-shadow: 2px 2px 60px #ffd97d;
+  }
+  100% {
+    color: #ff9b85;
+    text-shadow: 2px 2px 60px #ff9b85;
+  }
+}
+
+@keyframes backgroundColorPalette2 {
+  0% {
+    color: #ee6055;
+  }
+  25% {
+    color: #60d394;
+  }
+  50% {
+    color: #aaf683;
+  }
+  75% {
+    color: #ffd97d;
+  }
+  100% {
+    color: #ff9b85;
+  }
+}

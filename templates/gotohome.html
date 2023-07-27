@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      // JavaScript code to redirect immediately
+      function redirect() {
+        const para1 = "{{ para1 }}"; // Replace with your actual parameter value
+        const para2 = "{{ para2 }}"; // Replace with your actual parameter value
+        const para1value = "{{ para1value }}"; // Replace with your actual parameter value
+        const para2value = "{{ para2value }}"; // Replace with your actual parameter value
+
+        const url = `https://scratch-get-data.kokoiscool.repl.co?${para1}=${para1value}&${para2}=${para2value}`;
+        window.location.replace(url);
+      }
+
+      // Call the redirect function as soon as the page loads
+      window.onload = redirect;
+    </script>
+  </head>
+  <body>
+    <p>You will be redirected to the homepage with parameters: {{ para1 }} and {{ para2 }}</p>
+  </body>
+</html>

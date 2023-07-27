@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #222a3b;
+        font-family: 'Fira Code', monospace;
+        color: white;
+      }
+
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .admin-box {
+        background-color: #384154;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+      }
+
+      .admin-box h2 {
+        margin-top: 0;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+        text-align: center;
+      }
+
+      .admin-box p {
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+      }
+
+      .admin-box button,
+      .admin-box input[type="submit"] {
+        display: block;
+        margin-top: 1rem;
+        font-size: 1.2rem;
+        border-radius: 0.5rem;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 0.5rem;
+        transition: background-color 0.3s ease;
+      }
+
+      .admin-box button:hover,
+      .admin-box input[type="submit"]:hover {
+        background-color: #ff9b85;
+      }
+
+      .form-textarea {
+        background-color: #f2f2f2;
+        border: none;
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        font-family: 'Roboto Mono', monospace;
+        color: #222;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        resize: none;
+      }
+
+      input[type="submit"] {
+        background-color: #384154;
+        color: white;
+      }
+
+      input[type="submit"]:hover {
+        background-color: #384154;
+      }
+
+      .restart-button {
+        background-color: #ee6055;
+      }
+
+      .restart-button:hover {
+        background-color: #ff9b85;
+      }
+
+      a {
+        text-decoration: none;
+        text-decoration-color: none;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="admin-box">
+        <h2>Welcome to the admin page!</h2>
+        <p>You are logged in as {{ session['username'] }}.</p>
+        <p>Here is some sensitive information that only authorized users can see.</p>
+        <br>
+        <p>Update the updates.txt</p>
+        <form action="{{ url_for('update_updates') }}" method="POST">
+          <textarea name="updates" rows="5" cols="50" class="form-textarea"></textarea>
+          <br>
+          <input type="submit" value="Update">
+        </form>
+        <br>
+        <form action="/internal/restart" method="GET">
+          <input type="hidden" name="string" value="4A2qUB2RpQBtOZsZnrKHPf}">
+          <button type="submit" class="restart-button" onclick="event.preventDefault(); document.getElementById('restart-form').submit();">Restart Server</button>
+        </form>
+        <form id="restart-form" action="/internal/restart" method="GET" style="display: none;">
+          <input type="hidden" name="string" value="4A2qUB2RpQBtOZsZnrKHPf">
+        </form>
+        <br>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </body>
+</html>
