@@ -76,7 +76,7 @@ try:
   reencrypt_database = 'true'
 except ValueError:
   print("Database is not encrypted! loading directly without decrypting.")
-  print(Fore.YELLOW + "Warning: Not encrypting database gives you risk of password, username, api key stolen of your users. To encrypt the database run 'python extra/encrypt_database.py' " + Fore.RESET)
+  print(Fore.YELLOW + "Warning: Not encrypting database gives you risk of password, username, api key stolen of your users. To encrypt the database run 'python extra/encrypt_database.py' in your teminal." + Fore.RESET)
   reencrypt_database = 'false'
   pass
 #Required Settings
