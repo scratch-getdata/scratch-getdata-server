@@ -260,6 +260,17 @@ Flask-Silk = ">=0.2"
 future = ">=0.13.0"
 
 [[package]]
+name = "flask-cors"
+version = "4.0.0"
+description = "A Flask extension adding a decorator for CORS support"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+Flask = ">=0.9"
+
+[[package]]
 name = "flask-jwt-extended"
 version = "4.5.2"
 description = "Extended JWT integration with Flask"
@@ -1047,7 +1058,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-ena
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10.0,<3.11"
-content-hash = "53fe2dd776bc5c30e1cbab20b15699ad004d6e080e23597e8183f01ee2b4e7a6"
+content-hash = "d6795f1f211f34bc350f83f068928700ab3bfd27045f24be153d3b58742b2bc1"
 
 [metadata.files]
 apscheduler = []
@@ -1071,6 +1082,7 @@ distlib = []
 filelock = []
 flask = []
 flask-autoindex = []
+flask-cors = []
 flask-jwt-extended = []
 flask-silk = []
 flask-socketio = []

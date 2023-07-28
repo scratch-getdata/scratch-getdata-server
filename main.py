@@ -1,4 +1,4 @@
-from flask import render_template, send_file, request, redirect, session, make_response, flash
+from flask import render_template, send_file, request, redirect, session, make_response, flash, current_app
 from flask import Flask, jsonify
 from flask import abort
 from flask import url_for
@@ -11,6 +11,7 @@ from flask_autoindex import AutoIndex
 import json
 from base64 import b64encode
 import smtplib
+from flask_cors import CORS, cross_origin
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import pytz
@@ -40,19 +41,41 @@ from flask_jwt_extended import JWTManager
 import extra.decrypt_database
 import extra.encrypt_database
 
+# Args
+
+nowarning = False
+nodebug = False
+
+if 'no-warning' in sys.argv:
+    nowarning = True
+    print(Fore.BLUE + "Warning Disabled!" + Fore.RESET)
+elif os.environ['no-warning'] == 'true':
+    nowarning = True
+    print(Fore.BLUE + "Warning Disabled!" + Fore.RESET)
+
+if 'no-debug' in sys.argv:
+    nodebug = True
+    print(Fore.BLUE + "Debug logs Disabled!" + Fore.RESET)
+elif os.environ['debug'] == 'false':
+    nodebug = True
+    print(Fore.BLUE + "Debug logs Disabled!" + Fore.RESET)
+
+
+
+  
+
 def signal_handler(signal, frame):
-    print("QUIT Signal Recived.")
-    print("Closing Database")
-    try:
-      conn.close()  
-    except:
-      print(Fore.RED + "Cannot close database. Database is probably already closed." + Fore.RESET)
+    if nodebug == False:
+      print("QUIT Signal Recived.")
+      print("Closing Database")
     try:
       if reencrypt_database == 'true':
-        print("Encrypting the database")
+        if nodebug == False:
+          print("Encrypting the database")
         extra.encrypt_database.encrypt_file()
       else:
-        print("Leaving Database Unencrypted")
+        if nodebug == False:
+          print("Leaving Database Unencrypted")
 
     except:
       pass
@@ -61,22 +84,26 @@ def signal_handler(signal, frame):
     sys.exit(0)
 
 # Register the signal_handler function to be called only on SIGINT (Ctrl+C)
-for sig in signal.Signals:
-    try:
-        signal.signal(sig, signal_handler)
-    except (OSError, RuntimeError):
-        pass
+try:
+    # Set the signal handler only for SIGINT (Ctrl+C) signal
+    signal.signal(signal.SIGINT, signal_handler)
+except (OSError, RuntimeError):
+    pass
 
 #Decrypt Database
 
 try:
-  print("Loading Database.")
+  if nodebug == False:
+    print("Loading Database.")
   extra.decrypt_database.decrypt_file()
-  print("Database has been decrypted!")
+  if nodebug == False:
+    print("Database has been decrypted!")
   reencrypt_database = 'true'
 except ValueError:
-  print("Database is not encrypted! loading directly without decrypting.")
-  print(Fore.YELLOW + "Warning: Not encrypting database gives you risk of password, username, api key stolen of your users. To encrypt the database run 'python extra/encrypt_database.py' in your teminal." + Fore.RESET)
+  if nodebug == 'false':
+    print("Database is not encrypted! loading directly without decrypting.")
+  if nowarning == False:
+    print(Fore.YELLOW + "Warning: Not encrypting database gives you risk of password, username, api key stolen of your users. To encrypt the database run 'python extra/encrypt_database.py' in your teminal." + Fore.RESET)
   reencrypt_database = 'false'
   pass
 #Required Settings
@@ -158,6 +185,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DATABASE_PATH_FOR_BLAHBLA
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 jwt = JWTManager(app)
+CORS(app)
 
 db = SQLAlchemy(app)
 
@@ -189,7 +217,8 @@ scheduler.start()
 
 time.sleep(1)
 
-print(Fore.GREEN + "Flask Initialized." + Fore.RESET)
+if nodebug == 'false':
+  print(Fore.GREEN + "Flask Initialized." + Fore.RESET)
 
 DATABASE_NAME = 'users.db'
 
@@ -334,7 +363,7 @@ def send_otp_email(email, otp):
         template = file.read()
 
     # Replace the placeholder with the actual OTP
-    email_body = template.replace('{verifycode}', otp)
+    email_body = template.replace('{{ otp }}', otp)
     
     # Create the email body (HTML format)
     html_part = MIMEText(email_body, 'html')
@@ -397,6 +426,16 @@ def make_session_permanent():
 @app.errorhandler(NoAuthorizationError)
 def handle_auth_error(e):
     return redirect(url_for('login', afterlogin=request.path))
+
+@app.context_processor
+def inject_cors_headers():
+    def add_cors_headers():
+        response = current_app.make_response()
+        response.headers['Access-Control-Allow-Origin'] = 'scratch-get-data.kokoiscool.repl.co'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+    return dict(add_cors_headers=add_cors_headers)
+
 
 @app.before_request
 def check_key():
@@ -485,7 +524,8 @@ def check_key():
 
 def get_scratch_data(url):
     proxy_url = 'https://jungle-strengthened-aardvark.glitch.me/get/'
-    proxied_url = proxy_url + url
+    proxy_url_backup = 'https://vnmppd-5000.csb.app/scratch_proxy/'
+    proxied_url = proxy_url_backup + url
     response = requests.get(proxied_url)
     response.raise_for_status()
 
@@ -497,11 +537,25 @@ def get_scratch_data(url):
         except ValueError:
             return response.text
 
+def get_scratch_data_wiwo(url):
+    response = requests.get(url)
+    response_text = response.text
+
+    try:
+        parsed_data = response.json()  # Try parsing the response content as JSON
+        return parsed_data  # Return the JSON data as-is
+    except Exception as e:
+        print("Failed to parse:", e)
+        return None
+
 def get_scratch_data_nojson(url):
     proxy_url = 'https://jungle-strengthened-aardvark.glitch.me/get/'
-    proxied_url = proxy_url + url
+    proxy_url_backup = 'https://vnmppd-5000.csb.app/scratch_proxy/'
+    proxied_url = proxy_url_backup + url
     response = requests.get(proxied_url)
     response.raise_for_status()
+
+    print("Response content:", response.text)  # Print the response content
 
     return response
 
@@ -613,11 +667,11 @@ def is_scratcher(username):
     if status_tag:
         status = status_tag.text.strip()
         print(status)
-        result = {"Status": status}
+        result = status
     else:
         status = "Unknown"
         print(f"Status: {status}")  # Print the status when the status_tag is not found
-        result = {"Status": status}
+        result = status
     try:
         return json.dumps(result)
     except:
@@ -658,37 +712,39 @@ def is_scratcher2(username):
 @app.route("/get/following-count/<username>/")
 def following(username):
     try:
-        response = requests.get(f"http://jungle-strengthened-aardvark.glitch.me/following/{username}")
-        if response.status_code == 200:
-            data = json.loads(response.text)
-            if isinstance(data, int):
-                return str(data)
+        # Call the get_scratch_data function to get the JSON data
+        url = 'https://api.scratch.mit.edu/users/{username}/following_count'
+        response_data = get_scratch_data(url.format(username=username))
+
+        if response_data is not None:
+            if isinstance(response_data, int):
+                return str(response_data)
             else:
                 abort(404)
                 return "Invalid response"
-        elif response.status_code == 404:
+        else:
             abort(404)
             return "User does not exist"
-        else:
-            return "Invalid response"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {str(e)}"
+
 
 @app.route("/get/wiwo/<username>/")
 def wiwo(username):
     try:
-        response = requests.get(
-            f"https://jungle-strengthened-aardvark.glitch.me/get/https://api.scratch.mit.edu/users/{username}"
-        )
-        if response.status_code == 200:
-            data = json.loads(response.text)
-            profile = data.get("profile", {})
+        # Call the get_scratch_data function to get the JSON data
+        url = 'https://api.scratch.mit.edu/users/{username}'
+        response_data = get_scratch_data(url.format(username=username))
+
+        if response_data is not None:
+            profile = response_data.get("profile", {})
             work = profile.get("status", "")
             return work.replace("\n", " ")
         else:
             abort(404)
-            return "Invalid response"
+            return "Invalid response or user not found"
     except requests.exceptions.RequestException as e:
+        print(e)
         abort(404)
         return f"An error occurred: {str(e)}"
 
@@ -696,20 +752,18 @@ def wiwo(username):
 @app.route("/get/aboutme/<username>/")
 def about_me(username):
     try:
-        response = requests.get(f"https://jungle-strengthened-aardvark.glitch.me/get/https://api.scratch.mit.edu/users/{username}")
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        if response.text:
-            try:
-                data = json.loads(response.text)
-                if "code" in data and data["code"] == "NotFound":
-                    abort(404)
-                    return "User does not exist"
-                elif "username" in data and "profile" in data:
-                    about_me = data["profile"].get("bio", "")
-                    return about_me
-                else:
-                    return "Invalid response structure"
-            except json.decoder.JSONDecodeError:
+        # Call the get_scratch_data function to get the JSON data
+        url = 'https://api.scratch.mit.edu/users/{username}'
+        response_data = get_scratch_data(url.format(username=username))
+
+        if response_data is not None:
+            if "code" in response_data and response_data["code"] == "NotFound":
+                abort(404)
+                return "User does not exist"
+            elif "username" in response_data and "profile" in response_data:
+                about_me_text = response_data["profile"].get("bio", "")
+                return about_me_text
+            else:
                 return "Invalid response structure"
         else:
             return "No data received"
@@ -739,83 +793,80 @@ def get_messages(username):
 @app.route("/get/project/creator/<project_id>/")
 def project_creator(project_id):
     try:
-        response = requests.get(f"https://jungle-strengthened-aardvark.glitch.me/get/https://api.scratch.mit.edu/projects/{project_id}")
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        if response.status_code == 200:
-            data = json.loads(response.text)
-            if "author" in data and "username" in data["author"]:
-                creator = data["author"]["username"]
+        # Call the get_scratch_data function to get the JSON data
+        url = 'https://api.scratch.mit.edu/projects/{project_id}'
+        response_data = get_scratch_data(url.format(project_id=project_id))
+
+        if response_data is not None:
+            if "author" in response_data and "username" in response_data["author"]:
+                creator = response_data["author"]["username"]
                 return creator
             else:
                 return "Project creator not found"
-        elif response.status_code == 404:
+        else:
             abort(404)
             return "Project not found"
-        else:
-            return "Invalid response"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {str(e)}"
+
 
 
 @app.route("/get/project/name/<project_id>/")
 def project_name(project_id):
     try:
-        response = requests.get(f"https://jungle-strengthened-aardvark.glitch.me/get/https://api.scratch.mit.edu/projects/{project_id}")
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        if response.status_code == 200:
-            data = json.loads(response.text)
-            if "title" in data:
-                name = data["title"]
+        # Call the get_scratch_data function to get the JSON data
+        url = 'https://api.scratch.mit.edu/projects/{project_id}'
+        response_data = get_scratch_data(url.format(project_id=project_id))
+
+        if response_data is not None:
+            if "title" in response_data:
+                name = response_data["title"]
                 return name
             else:
                 return "Project name not found"
-        elif response.status_code == 404:
+        else:
             abort(404)
             return "Project not found"
-        else:
-            return "Invalid response"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {str(e)}"
+
 
 
 @app.route("/get/project/notes_and_credits/<project_id>/")
 def project_notes_and_credits(project_id):
     try:
-        response = requests.get(f"https://jungle-strengthened-aardvark.glitch.me/get/https://api.scratch.mit.edu/projects/{project_id}")
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        if response.status_code == 200:
-            data = json.loads(response.text)
-            if "description" in data:
-                description = data["description"]
+        # Call the get_scratch_data function to get the JSON data
+        url = 'https://api.scratch.mit.edu/projects/{project_id}'
+        response_data = get_scratch_data(url.format(project_id=project_id))
+
+        if response_data is not None:
+            if "description" in response_data:
+                description = response_data["description"]
                 return description.strip()  # Return the description as-is
             else:
                 return "Project description not found"
-        elif response.status_code == 404:
+        else:
             abort(404)
             return "Project not found"
-        else:
-            return "Invalid response"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {str(e)}"
-
 
 @app.route("/get/project/instructions/<project_id>/")
 def project_instructions(project_id):
     try:
-        response = requests.get(f"https://jungle-strengthened-aardvark.glitch.me/get/https://api.scratch.mit.edu/projects/{project_id}")
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        if response.status_code == 200:
-            data = json.loads(response.text)
-            if "instructions" in data:
-                instructions = data["instructions"]
+        # Call the get_scratch_data function to get the JSON data
+        url = 'https://api.scratch.mit.edu/projects/{project_id}'
+        response_data = get_scratch_data(url.format(project_id=project_id))
+
+        if response_data is not None:
+            if "instructions" in response_data:
+                instructions = response_data["instructions"]
                 return instructions.strip()  # Return the instructions as-is
             else:
                 return "Project instructions not found"
-        elif response.status_code == 404:
+        else:
             abort(404)
             return "Project not found"
-        else:
-            return "Invalid response"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {str(e)}"
 
@@ -988,37 +1039,37 @@ def profile_pic(size, username):
 @app.route("/get/studio/title/<studioid>/")
 def studio_title(studioid):
     try:
-        response = requests.get(f"https://jungle-strengthened-aardvark.glitch.me/get/https://api.scratch.mit.edu/studios/{studioid}")
-        if response.status_code == 200:
-            data = json.loads(response.text)
-            if "title" in data:
-                title = data["title"]
+        # Call the get_scratch_data function to get the JSON data
+        url = 'https://api.scratch.mit.edu/studios/{studioid}'
+        response_data = get_scratch_data(url.format(studioid=studioid))
+
+        if response_data is not None:
+            if "title" in response_data:
+                title = response_data["title"]
                 return title
             else:
                 return "Studio title not found"
-        elif response.status_code == 404:
+        else:
             abort(404)
             return "Studio not found"
-        else:
-            return "Invalid response"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {str(e)}"
 
 @app.route("/get/studio/description/<studioid>/")
 def studio_description(studioid):
     try:
-        response = requests.get(f"https://jungle-strengthened-aardvark.glitch.me/get/https://api.scratch.mit.edu/studios/{studioid}")
-        if response.status_code == 200:
-            data = json.loads(response.text)
-            if "description" in data:
-                description = data["description"]
+        # Call the get_scratch_data function to get the JSON data
+        url = 'https://api.scratch.mit.edu/studios/{studioid}'
+        response_data = get_scratch_data(url.format(studioid=studioid))
+
+        if response_data is not None:
+            if "description" in response_data:
+                description = response_data["description"]
                 return description
             else:
                 return "Studio description not found"
-        elif response.status_code == 404:
-            return "Studio not found"
         else:
-            return "Invalid response"
+            return "Studio not found"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {str(e)}"
 
@@ -1172,20 +1223,42 @@ def login():
                 now_str = now.strftime('%Y-%m-%d %H:%M:%S')
 
                 print("Time: " + now_str)
+
+                c.execute("SELECT userid FROM users_email_otp WHERE userid = ?", (session['user_id'],))
+
+                exist = c.fetchone()
+
+                if exist:
+
+                  c.execute("SELECT email FROM users WHERE userid = ?", (session['user_id'],))
+
+                  email = c.fetchone()
+
+                  otp = generate_random_string(6)
+
+                  c.execute("UPDATE users_email_otp SET otp = ? WHERE userid = ?", (otp, session['user_id']))
+
+                  conn.commit()
+                  send_otp_email(email, otp)
+
+                  redirect(url_for('email_otp', afterverify='dashboard'))
+
+                else:
+                
               
-                c.execute('INSERT INTO strings (userid, string, created) VALUES (?, ?, ?)', (session['user_id'], session['token'], now_str))
-                conn.commit()
-                print('userid: ' + str(session['user_id']) + ' string: ' + session['token'])
-                if afterlogin is not None:
-                  if afterlogin != '':
-                   return redirect(url_for(afterlogin))
+                  c.execute('INSERT INTO strings (userid, string, created) VALUES (?, ?, ?)', (session['user_id'], session['token'], now_str))
+                  conn.commit()
+                  print('userid: ' + str(session['user_id']) + ' string: ' + session['token'])
+                  if afterlogin is not None:
+                    if afterlogin != '':
+                      return redirect(url_for(afterlogin))
+                    else:
+                      return redirect(url_for('dashboard'))
                   else:
                     return redirect(url_for('dashboard'))
-                else:
-                  return redirect(url_for('dashboard'))
             else:
-                flash('Invalid username or password')
-                print('Invalid username or password')
+              flash('Invalid username or password')
+              print('Invalid username or password')
               
             conn.close()  
         
@@ -1214,6 +1287,32 @@ def login():
             conn.close()  
         
     return render_template('login.html')
+
+@app.route('/email_otp_verify', methods=['GET', 'POST'])
+def email_otp():
+    afterlogin = request.args.get('afterverify', '').lstrip('/')
+    if request.method == 'POST':
+        email = session['user_id']
+        otp_entered = request.form.get('otp')
+
+        conn = sqlite3.connect(DATABASE_NAME)
+        
+        c = conn.cursor()
+
+        # Retrieve the OTP for the entered email from the database
+        c.execute("SELECT otp FROM users_email_otp WHERE userid = ?", (email,))
+        stored_otp = c.fetchone()
+
+        if stored_otp and otp_entered == stored_otp[0]:
+            afterlogin = request.args.get('afterverify', '').lstrip('/')
+            c.execute('INSERT INTO strings (userid, string, created) VALUES (?, ?, ?)', (session['user_id'], session['token'], now))
+            conn.commit()
+            return redirect(url_for(afterlogin))
+        else:
+            return "Invalid OTP. Please try again."
+
+    # If the request method is GET, show the OTP verification form
+    return render_template('otp_verification.html', afterlogin=afterlogin)
 
 @app.route("/scratchauth")
 def scratchauth():
@@ -1267,66 +1366,85 @@ def server_status():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    def read_weak_passwords():
+        weak_passwords = set()
+        with open('weak_passwords.txt', 'r') as file:
+            for line in file:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    weak_passwords.add(line)
+        return weak_passwords
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-        
+
         # Generate a password hash
         password_hash = generate_password_hash(password)
-        
-        # Connect to the database
-        conn = sqlite3.connect(DATABASE_NAME)
-        c = conn.cursor()
-        
-        # Check if the username already exists in the database
-        c.execute('SELECT * FROM users WHERE username = ?', (username,))
-        result = c.fetchone()
-        
-        if result:
-            flash('Username already exists')
-        else:
-            # Insert the new user into the database
-            c.execute('INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)', (username, password_hash, email))
-            user_id = c.lastrowid
-            conn.commit()
-            
-            # Generate a random 6-digit verification code
-            verification_code = ''.join(random.choices(string.digits, k=6))
-            
-            # Insert the user ID and verification code into the "verifycode" table
-            c.execute('INSERT INTO verifycode (userid, code) VALUES (?, ?)', (user_id, verification_code))
-            conn.commit()
 
-            
-            # Generate a random key for the user
-            key = secrets.token_hex(16)
-          
-            c.execute('SELECT * FROM keys WHERE key = ?', (key,))
+        # Check password length
+        if len(password) < 7:
+            flash('Password must be at least 7 characters long.')
+        else:
+            # Connect to the database
+            conn = sqlite3.connect(DATABASE_NAME)
+            c = conn.cursor()
+
+            # Check if the username already exists in the database
+            c.execute('SELECT * FROM users WHERE username = ?', (username,))
             result = c.fetchone()
+
             if result:
-              c.execute('SELECT * FROM keys WHERE key = ?', (key,))
-              result = c.fetchone()
-              c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
-              c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
-              conn.commit()
+                flash('Username already exists')
             else:
-              c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
-              c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
-              conn.commit()
-        
-            
-            
-            flash('User created successfully')
-            sendemailtorec(email, verification_code)
-        
-        # Close the database connection
-        conn.close()
-        
-        # Redirect to the login page
-        return redirect(url_for('email_verification'))
-    
+                # Check if the password is in the list of weak passwords
+                weak_passwords = read_weak_passwords()
+                if password in weak_passwords:
+                    print("Weak password. Please choose a stronger one.")
+                    flash('Weak password. Please choose a stronger one.')
+                else:
+                    # Insert the new user into the database
+                    c.execute('INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)',
+                              (username, password_hash, email))
+                    user_id = c.lastrowid
+                    conn.commit()
+
+                    # Generate a random 6-digit verification code
+                    verification_code = ''.join(random.choices(string.digits, k=6))
+
+                    # Insert the user ID and verification code into the "verifycode" table
+                    c.execute('INSERT INTO verifycode (userid, code) VALUES (?, ?)', (user_id, verification_code))
+                    conn.commit()
+
+                    # Generate a random key for the user
+                    key = secrets.token_hex(16)
+
+                    c.execute('SELECT * FROM keys WHERE key = ?', (key,))
+                    result = c.fetchone()
+                    if result:
+                        c.execute('SELECT * FROM keys WHERE key = ?', (key,))
+                        result = c.fetchone()
+                        c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
+                        c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
+                        conn.commit()
+                    else:
+                        c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
+                        c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
+                        conn.commit()
+
+                    flash('User created successfully')
+                    sendemailtorec(email, verification_code)
+
+            # Close the database connection
+            conn.close()
+
+            # Redirect to the login page
+            return redirect(url_for('email_verification'))
+
     return render_template('signup.html')
+
+
 
 @app.route('/email_verification', methods=['GET', 'POST'])
 def email_verification():
@@ -1572,6 +1690,30 @@ def dashboard():
     else:
         print('no session found redirecting to login')
         return redirect(url_for('login'))
+
+@app.route('/otp/setup/email')
+def setup_otp():
+  if 'user_id' in session and 'username' in session and 'token' in session:
+     user_id = session['user_id']
+     username = session['username']
+     auth_string = session['token']
+
+     conn = sqlite3.connect('users.db')
+     c = conn.cursor()
+    
+
+     c.execute("SELECT email FROM users WHERE userid = ?", (user_id,))
+
+     email = c.fetchone()
+
+     otp = generate_random_string(6)
+
+     c.execute("INSERT INTO users_email_otp (userid, otp) VALUES (?, ?)", (user_id, otp))
+
+
+     send_otp_email(email, otp)
+
+     return redirect(url_for('email_otp'))
 
   
 @app.route('/admin')
@@ -1868,7 +2010,10 @@ def page_not_found(e):
 
 if __name__ == '__main__':
     #app.run(host='0.0.0.0', port=8080, debug=True, use_reloader=False)
-    socketio.run(app, host='0.0.0.0', port=8080)
+    if os.environ['debug'] == 'false':
+      socketio.run(app, host='0.0.0.0', port=8080)
+    else:
+      socketio.run(app, host='0.0.0.0', debug=True, port=8080)
     
   
 print(Fore.GREEN + "Flask Ready." + Fore.RESET)

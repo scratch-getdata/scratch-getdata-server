@@ -97,6 +97,13 @@
             background-color: #f0c822;
         }
     </style>
+      <style>
+        /* Style the list with the 'flash-messages' class */
+        ul.flash-messages {
+            list-style-type: none;
+            padding: 0;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -105,6 +112,18 @@
             {% if error %}
                 <p>{{ error }}</p>
             {% endif %}
+
+            <body>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for message in messages %}
+                    <center><li>{{ message }}</li></center>
+                <br>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
             <form method="post">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username">
