@@ -3,9 +3,6 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
-from flask import jsonify, Flask
-
-app = Flask(__name__)
 
 DATABASE_NAME = os.path.abspath('users.db')
 
@@ -42,11 +39,72 @@ def send_update_emails():
         body = '''<!DOCTYPE html>
 <html>
 <head>
-  <!-- Email CSS here -->
+  <style>
+    /* Reset styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    /* Global styles */
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    
+    /* Container styles */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Header styles */
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      font-size: 36px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    /* Button styles */
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    
+    .button:hover {
+      background-color: #0062cc;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <!-- Email content here -->
     <div class="header">
       <h1>Subscriber</h1>
       <p>Dear subscriber,</p>
@@ -72,28 +130,89 @@ def send_update_emails():
         recipients = get_subscribed_emails()
 
         if not recipients:
-            return jsonify({'message': 'No subscribers found!'})
+            return {'message': 'No subscribers found!'}
 
         # Send the update email to all subscribed users
         send_email(subject, body, recipients)
 
-        return jsonify({'message': 'Update emails sent successfully!'})
+        return {'message': 'Update emails sent successfully!'}
 
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return {'error': str(e)}
 
 
-def send_email_for_update():
+def send_email_for_update(email):
     try:
         subject = 'Subscribed!'
         body = '''<!DOCTYPE html>
 <html>
 <head>
-  <!-- Email CSS here -->
+  <style>
+    /* Reset styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    /* Global styles */
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    
+    /* Container styles */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Header styles */
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      font-size: 36px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    /* Button styles */
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    
+    .button:hover {
+      background-color: #0062cc;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <!-- Email content here -->
     <div class="header">
       <h1>Subscriber</h1>
       <p>Dear subscriber,</p>
@@ -107,24 +226,12 @@ def send_email_for_update():
 </html>'''
 
         # Get the subscribed emails from the database
-        recipients = get_subscribed_emails()
+        recipients = [email]
 
-        if not recipients:
-            return jsonify({'message': 'No subscribers found!'})
-
-        # Send the update email to all subscribed users
+        # Send the update email to the specified email address
         send_email(subject, body, recipients)
 
-        return jsonify({'message': 'Update emails sent successfully!'})
-    
+        return {'message': 'Update email sent successfully!'}
+
     except Exception as e:
-        return jsonify({'error': str(e)})
-
-if __name__ == '__main__':
-    # Run your update email sending task
-    with app.app_context():
-        send_update_emails()
-        send_email_for_update()
-
-    # Run the Flask app
-    app.run()
+        return {'error': str(e)}

@@ -40,26 +40,60 @@ from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_jwt_extended import JWTManager
 import extra.decrypt_database
 import extra.encrypt_database
+import ServerFiles.email_send
+
+#Calculate Uptime
+
+start_time = datetime.utcnow()
+
+def calculate_uptime(start_time):
+    current_time = datetime.utcnow()
+    uptime = current_time - start_time
+
+    # Calculate days, hours, minutes, and seconds
+    days = uptime.days
+    hours, remainder = divmod(uptime.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    # Create the uptime string
+    uptime_str = f"{days} days, {hours} hours, {minutes} minutes, {seconds} seconds"
+    return uptime_str
+
+# Function to get the current time in UTC and convert it to string format
+def get_current_time_str():
+    now = datetime.utcnow()
+    return now.strftime('%Y-%m-%d %H:%M:%S')
+
+
+
+uptime_str = calculate_uptime(start_time)
+print(f"Uptime: {uptime_str}")
+
 
 # Args
 
 nowarning = False
 nodebug = False
 
-if 'no-warning' in sys.argv:
-    nowarning = True
-    print(Fore.BLUE + "Warning Disabled!" + Fore.RESET)
-elif os.environ['no-warning'] == 'true':
-    nowarning = True
-    print(Fore.BLUE + "Warning Disabled!" + Fore.RESET)
+try:
 
-if 'no-debug' in sys.argv:
-    nodebug = True
-    print(Fore.BLUE + "Debug logs Disabled!" + Fore.RESET)
-elif os.environ['debug'] == 'false':
-    nodebug = True
-    print(Fore.BLUE + "Debug logs Disabled!" + Fore.RESET)
+  if 'no-warning' in sys.argv:
+      nowarning = True
+      print(Fore.BLUE + "Warning Disabled!" + Fore.RESET)
+  elif os.environ['no-warning'] == 'true':
+      nowarning = True
+      print(Fore.BLUE + "Warning Disabled!" + Fore.RESET)
 
+  if 'no-debug' in sys.argv:
+      nodebug = True
+      print(Fore.BLUE + "Debug logs Disabled!" + Fore.RESET)
+  elif os.environ['debug'] == 'false':
+      nodebug = True
+      print(Fore.BLUE + "Debug logs Disabled!" + Fore.RESET)
+
+except:
+  nodebug = True
+  nowarning = True
 
 
   
@@ -126,7 +160,7 @@ def check_for_updates():
             if update_data.get("version"):
               if update_data.get("version") == server_version:
                 update_status = "UpToDate"
-                latest_version = ""
+                latest_version = update_data.get("version")
                 time.sleep(1)
                 if nodebug == 'false':
                   print(Fore.BLUE + "Server version: " + server_version, Fore.RESET)
@@ -147,6 +181,15 @@ def check_for_updates():
         return f"An error has occurred while trying to check for updates: {e}"
 
 print(check_for_updates())
+
+params = {
+    "update": 'scratch-getdata',
+    "channel": server_channel
+        }
+
+response = requests.get("https://kokofixcomputers-update-server.kokoiscool.repl.co/check/update", params=params)
+update_data = json.loads(response.text)
+latest_version = update_data.get("version")
 
 #Set timezone
 vancouver_tz = pytz.timezone('America/Vancouver')
@@ -170,7 +213,6 @@ def generate_random_string(length):
 app = Flask(__name__)
 sock = Sock(app)
 app.config['JWT_SECRET_KEY'] = '1QGz0JZvqsNJg0Mp2o'  # Change this!
-app.config['SOCK_SERVER_OPTIONS'] = {'ping_interval': 25}
 app.config['JWT_TOKEN_LOCATION'] = ['cookies']
 app.config['JWT_ACCESS_COOKIE_NAME'] = 'Token'
 app.config['JWT_ACCESS_CSRF_HEADER_NAME'] = 'CSRF-TOKEN'
@@ -1599,7 +1641,7 @@ def server_status():
     now = datetime.utcnow()
     now_str = now.strftime('%Y-%m-%d %H:%M:%S')
     server_time = now_str
-    return render_template('serverstats.html', status_message=status_message, last_updated=last_updated, description=description, server_version=server_version, server_status=server_status, server_time=server_time)
+    return render_template('serverstats.html', status_message=status_message, last_updated=last_updated, description=description, server_version=server_version, server_status=server_status, server_time=server_time, latest_version=latest_version)
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -2111,6 +2153,8 @@ def subscribe_email():
         conn.commit()
         conn.close()
 
+        ServerFiles.email_send.send_email_for_update(email)
+
         return jsonify({'message': 'You have successfully subscribed to our newsletter!'})
     
     except Exception as e:
@@ -2196,7 +2240,8 @@ def websocket_handler(ws):
         while True:
             message = ws.receive()
             if message is None or message == '!break-connection!':
-                print("breaking websocket because closed")
+                print("Closing Websocket connection")
+                ws.close()
                 break
             ws.send(f'Received message: {message}')
             try:
@@ -2235,6 +2280,27 @@ def websocket_handler(ws):
     except:
         pass
 
+@sock.route('/serverinfo')
+def serverinfowebsocket(ws):
+  while True:
+    message = ws.receive()
+    if message is None or message == '!break-connection!':
+        print("breaking websocket because closed")
+        ws.close()
+        break
+    try:
+      message_data = json.loads(message)
+      if "message" in message_data:
+        if message_data["message"] == "server-version":
+          ws.send(server_version)
+        if message_data["message"] == "latest-server-version":       
+          ws.send(latest_version)
+        if message_data["message"] == "server-uptime":
+          uptime_str = calculate_uptime(start_time)
+          ws.send(uptime_str)
+    except:
+      ws.send(Exception)
+
 #Other things and error handlers.
 
 @app.route("/keep-alive/")
@@ -2254,19 +2320,19 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 @app.errorhandler(500)
-def page_not_found(e):
+def internel_server_error(e):
     return render_template('500.html'), 500
 
 @app.errorhandler(401)
-def page_not_found(e):
+def unauthorized(e):
     return render_template('401.html'), 401
 
 @app.errorhandler(400)
-def page_not_found(e):
+def bad_request(e):
     return render_template('400.html'), 400
 
 @app.errorhandler(405)
-def page_not_found(e):
+def meathod_not_allowed(e):
     return render_template('405.html'), 400
 
 if __name__ == '__main__':
