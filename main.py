@@ -128,8 +128,9 @@ def check_for_updates():
                 update_status = "UpToDate"
                 latest_version = ""
                 time.sleep(1)
-                print("Server version: " + server_version)
-                print("Latest Version: " + update_data.get("version"))
+                if nodebug == 'false':
+                  print(Fore.BLUE + "Server version: " + server_version, Fore.RESET)
+                  print(Fore.BLUE + "Latest Version: " + update_data.get("version") + Fore.RESET)
                 return "uptodate"
               else:
                   update_status = "NotUpToDate"
@@ -159,7 +160,6 @@ def base64(string):
 
 def generate_random_string(length):
     characters = string.ascii_letters + string.digits + "_"
-    print(characters)
     random_string = ''.join(random.choice(characters) for _ in range(length))
     while random_string.startswith('_') or random_string.endswith('_'):
         random_string = ''.join(random.choice(characters) for _ in range(length))
@@ -223,6 +223,244 @@ if nodebug == 'false':
 DATABASE_NAME = 'users.db'
 
 requests_left = 'Infinity'
+
+#Email
+def get_subscribed_emails():
+    conn = sqlite3.connect(DATABASE_NAME)
+    c = conn.cursor()
+    c.execute('SELECT email FROM email_subscribed_users')
+    emails = [row[0] for row in c.fetchall()]
+    conn.close()
+    return emails
+
+def send_email(subject, body, recipients):
+    msg = MIMEMultipart()
+    msg['From'] = os.environ['email_username']
+    msg['To'] = ', '.join(recipients)
+    msg['Subject'] = subject
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    server = smtplib.SMTP(os.environ['email_server'], 587)
+    server.starttls()
+    server.login(os.environ['email_username'], os.environ['email_password'])
+    server.sendmail(os.environ['email_username'], recipients, msg.as_string())
+    server.quit()
+
+def read_updates_from_file():
+    with open('updates-email.txt', 'r') as file:
+        updates = file.read()
+    return updates
+
+
+def sendupdateemail():
+    try:
+        subject = 'New Update!'
+        body = '''
+<!DOCTYPE html>
+<html>
+<head>
+      /* Reset styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    /* Global styles */
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    
+    /* Container styles */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Header styles */
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      font-size: 36px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    /* Button styles */
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    
+    .button:hover {
+      background-color: #0062cc;
+    }
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Subscriber</h1>
+      <p>Dear subscriber,</p>
+      <p>There is a new update!</p>
+      <br>
+      <p>Updates:</p>
+      <p>{update}</p>
+    </div>
+    <p>Best regards,</p>
+    <p>Your Website Team</p>
+    <a class="button" href="https://scratch-get-data.kokoiscool.repl.co">Visit Website</a>
+  </div>
+</body>
+</html>
+'''
+
+        # Read updates from the file
+        updates = read_updates_from_file()
+
+        # Replace the {update} placeholder in the email body with the actual updates
+        body = body.format(update=updates)
+
+        # Get the subscribed emails from the database
+        recipients = get_subscribed_emails()
+
+        if not recipients:
+            return jsonify({'message': 'No subscribers found!'})
+
+        # Send the update email to all subscribed users
+        send_email(subject, body, recipients)
+
+        return jsonify({'message': 'Update emails sent successfully!'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+
+def sendemailforupdate():
+    try:
+        subject = 'Subscribed!'
+        body = '''
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    /* Reset styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    /* Global styles */
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    
+    /* Container styles */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Header styles */
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      font-size: 36px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    /* Button styles */
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    
+    .button:hover {
+      background-color: #0062cc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Subscriber</h1>
+      <p>Dear subscriber,</p>
+      <p>We are excited to share with you our latest update. Thank you for staying connected with us!</p>
+    </div>
+    <p>Best regards,</p>
+    <p>Your Website Team</p>
+    <a class="button" href="https://scratch-get-data.kokoiscool.repl.co">Visit Website</a>
+  </div>
+</body>
+</html>
+'''
+
+        
+        # Get the subscribed emails from the database
+        recipients = get_subscribed_emails()
+
+        if not recipients:
+            return jsonify({'message': 'No subscribers found!'})
+
+        # Send the update email to all subscribed users
+        send_email(subject, body, recipients)
+
+        return jsonify({'message': 'Update emails sent successfully!'})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 def sendemailtorec(recipient_email, verifycode):
     # Create the email message
@@ -1854,6 +2092,29 @@ def settingsdashboard():
     else:
       return redirect(url_for('login'))            
     # Add your logic here to handle the settings page
+
+@app.route('/subscribe')
+def subscribe():
+    return render_template('subscribe.html')
+
+@app.route('/subscribe_email', methods=['POST'])
+def subscribe_email():
+    try:
+        email = request.json['email']
+
+        # Connect to the database
+        conn = sqlite3.connect(DATABASE_NAME)
+        c = conn.cursor()
+
+        # Insert the email into the email_subscribed_users table
+        c.execute('INSERT INTO email_subscribed_users (email) VALUES (?)', (email,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': 'You have successfully subscribed to our newsletter!'})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 @app.route('/logout')
 def logout():
