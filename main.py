@@ -992,19 +992,17 @@ def is_scratcher2(username):
 @app.route("/get/following-count/<username>/")
 def following(username):
     try:
-        # Call the get_scratch_data function to get the JSON data
-        url = 'https://api.scratch.mit.edu/users/{username}/following_count'
-        response_data = get_scratch_data(url.format(username=username))
-
-        if response_data is not None:
-            if isinstance(response_data, int):
-                return str(response_data)
+        response = requests.get(f"http://jungle-strengthened-aardvark.glitch.me/following/{username}")
+        if response.status_code == 200:
+            data = json.loads(response.text)
+            if isinstance(data, int):
+                return str(data)
             else:
-                abort(404)
                 return "Invalid response"
-        else:
-            abort(404)
+        elif response.status_code == 404:
             return "User does not exist"
+        else:
+            return "Invalid response"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {str(e)}"
 
@@ -1641,6 +1639,7 @@ def server_status():
     now = datetime.utcnow()
     now_str = now.strftime('%Y-%m-%d %H:%M:%S')
     server_time = now_str
+    uptime_str = calculate_uptime(start_time)
     return render_template('serverstats.html', status_message=status_message, last_updated=last_updated, description=description, server_version=server_version, server_status=server_status, server_time=server_time, latest_version=latest_version)
 
 
@@ -1659,69 +1658,78 @@ def signup():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
+        confirm_password = request.form['confirm_password']
+
+        if password != confirm_password:
+          flash('Passwords do not match')
+
+        else:
 
         # Generate a password hash
-        password_hash = generate_password_hash(password)
+          password_hash = generate_password_hash(password)
 
         # Check password length
-        if len(password) < 7:
-            flash('Password must be at least 7 characters long.')
-        else:
+          if len(password) < 7:
+              flash('Password must be at least 7 characters long.')
+          else:
             # Connect to the database
-            conn = sqlite3.connect(DATABASE_NAME)
-            c = conn.cursor()
+              conn = sqlite3.connect(DATABASE_NAME)
+              c = conn.cursor()
 
             # Check if the username already exists in the database
-            c.execute('SELECT * FROM users WHERE username = ?', (username,))
-            result = c.fetchone()
+              c.execute('SELECT * FROM users WHERE username = ?', (username,))
+              result = c.fetchone()
 
-            if result:
-                flash('Username already exists')
-            else:
+              if result:
+                  flash('Username already exists')
+              else:
                 # Check if the password is in the list of weak passwords
-                weak_passwords = read_weak_passwords()
-                if password in weak_passwords:
-                    print("Weak password. Please choose a stronger one.")
-                    flash('Weak password. Please choose a stronger one.')
-                else:
-                    # Insert the new user into the database
-                    c.execute('INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)',
-                              (username, password_hash, email))
-                    user_id = c.lastrowid
-                    conn.commit()
+                 weak_passwords = read_weak_passwords()
+                 if password in weak_passwords:
+                      print("Weak password. Please choose a stronger one.")
+                      flash('Weak password. Please choose a stronger one.')
+                 else:
+                      # Insert the new user into the database
+                      c.execute('INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)',
+                                (username, password_hash, email))
+                      user_id = c.lastrowid
+                      conn.commit()
 
-                    # Generate a random 6-digit verification code
-                    verification_code = ''.join(random.choices(string.digits, k=6))
+                     # Generate a random 6-digit verification code
+                      verification_code = ''.join(random.choices(string.digits, k=6))
 
-                    # Insert the user ID and verification code into the "verifycode" table
-                    c.execute('INSERT INTO verifycode (userid, code) VALUES (?, ?)', (user_id, verification_code))
-                    conn.commit()
+                      # Insert the user ID and verification code into the "verifycode" table
+                      c.execute('INSERT INTO verifycode (userid, code) VALUES (?, ?)', (user_id, verification_code))
+                      conn.commit()
 
                     # Generate a random key for the user
-                    key = secrets.token_hex(16)
+                      key = secrets.token_hex(16)
 
-                    c.execute('SELECT * FROM keys WHERE key = ?', (key,))
-                    result = c.fetchone()
-                    if result:
-                        c.execute('SELECT * FROM keys WHERE key = ?', (key,))
-                        result = c.fetchone()
-                        c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
-                        c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
-                        conn.commit()
-                    else:
-                        c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
-                        c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
-                        conn.commit()
+                      c.execute('SELECT * FROM keys WHERE key = ?', (key,))
+                      result = c.fetchone()
+                      if result:
+                          c.execute('SELECT * FROM keys WHERE key = ?', (key,))
+                          result = c.fetchone()
+                          c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
+                          c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
+                          conn.commit()
+                      else:
+                          c.execute('INSERT INTO keys (userid, key) VALUES (?, ?)', (user_id, key))
+                          c.execute('INSERT INTO requests (userid, count) VALUES (?, ?)', (user_id, '0'))
+                          conn.commit()
 
-                    flash('User created successfully')
-                    sendemailtorec(email, verification_code)
+                      flash('User created successfully')
+                      sendemailtorec(email, verification_code)
+
+                      return redirect(url_for('email_verification'))
 
             # Close the database connection
-            conn.close()
+              conn.close()
 
             # Redirect to the login page
-            return redirect(url_for('email_verification'))
-
+                 #if not password in weak_passwords and len(password) < 7 and password != confirm_password:
+                  
+    
     return render_template('signup.html')
 
 
@@ -2298,8 +2306,10 @@ def serverinfowebsocket(ws):
         if message_data["message"] == "server-uptime":
           uptime_str = calculate_uptime(start_time)
           ws.send(uptime_str)
-    except:
-      ws.send(Exception)
+    except ConnectionError:
+      print("Websocket Closed")
+      ws.close()
+      break
 
 #Other things and error handlers.
 

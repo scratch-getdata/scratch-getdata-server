@@ -76,24 +76,27 @@
       .signup-box input[type="submit"]:hover {
         background-color: #ff9b85;
       }
+              /* Style the list with the 'flash-messages' class */
+        ul.flash-messages {
+            list-style-type: none;
+            padding: 0;
+        }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="signup-box">
         <h2>Signup</h2>
-        {% if error %}
-          <p>{{ error }}</p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for message in messages %}
+                    <center><li>{{ message }}</li></center>
+                <br>
+                {% endfor %}
+            </ul>
         {% endif %}
-        {% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class="flashes">
-      {% for message in messages %}
-        <li>{{ message }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
+    {% endwith %}
 
         <form method="post">
           <label for="username">Username:</label>

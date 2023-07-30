@@ -52,7 +52,41 @@
       <center><h6 class="underlined-text">Latest Version: {{ latest_version }}</h6></center>
       <center><h6 class="underlined-text">Server Status: {{ server_status }}</h6></center>
       <center><h6 class="underlined-text">Server Time: {{ server_time }}</h6></center>
+      <center><h6 id="uptime-display" class="underlined-text ">Server Uptime: Connecting</h6></center>
       <center><h6 class="underlined-text">{{ description }}</h6></center>
+
+      <script>
+    // WebSocket connection
+    const socket = new WebSocket('wss://scratch-get-data.kokoiscool.repl.co/serverinfo');
+        
+    // Handle WebSocket events
+    socket.onopen = () => {
+      console.log('WebSocket connected');
+      document.getElementById('uptime-display').innerText = 'Connected to WebSocket server';
+      
+      // Send the initial message
+      socket.send(JSON.stringify({ "message": "server-uptime" }));
+    };
+
+    socket.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      
+      // Handle the uptime message from the server
+      const uptime = message.uptime;
+      document.getElementById('uptime-display').innerText = `Uptime: ${uptime}`;
+      
+    };
+
+    socket.onclose = () => {
+      console.log('WebSocket connection closed');
+      document.getElementById('uptime-display').innerText = 'WebSocket connection closed';
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      document.getElementById('uptime-display').innerText = 'WebSocket error';
+    };
+  </script>
   </div>
 </body>
 
