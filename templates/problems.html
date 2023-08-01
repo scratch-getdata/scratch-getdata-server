@@ -144,7 +144,12 @@ function updateModalContent(title, modalDetails, outsideModalDetails) {
 }
 
 function loadUpdates() {
-  fetch('{{ url_for("static", filename="issue.txt") }}')
+  fetch('{{ url_for("static", filename="issue.txt") }}', {
+    headers: {
+      'Allow-Main-Only': 'superlongpassword'
+      'Allow-Orgin': 'https://scratch-get-data.kokoiscool.repl.co'
+    }
+  })
     .then(response => response.text())
     .then(text => {
       const lines = text.trim().split('\n');

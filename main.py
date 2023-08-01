@@ -137,7 +137,7 @@ except ValueError:
   if nodebug == 'false':
     print("Database is not encrypted! loading directly without decrypting.")
   if nowarning == False:
-    print(Fore.YELLOW + "Warning: Not encrypting database gives you risk of password, username, api key stolen of your users. To encrypt the database run 'python extra/encrypt_database.py' in your teminal." + Fore.RESET)
+    print(Fore.YELLOW + "Warning: Not encrypting database gives you risk of password, username, api key stolen of your users. To encrypt the database run 'python extra/encrypt_my_database.py' in your teminal." + Fore.RESET)
   reencrypt_database = 'false'
   pass
 #Required Settings
@@ -856,6 +856,10 @@ def home():
        return render_template('index.html', message=message)
      else:
        return render_template('index.html', message=message, status=status)
+
+@app.route('/googlea2534a03c1e2febf.html')
+def googleverify():
+  return render_template('googlea2534a03c1e2febf.html')
   
 
 @app.route('/settings')
@@ -913,10 +917,15 @@ def pythondocs():
 def udocs():
    return render_template('docs.html')
 
+@app.route('/sub-test', subdomain="static")
+def sub_test():
+  return "Hellp"
+
 @app.route("/get/follower-count/<username>/")
 def count(username):
     try:
-        response = requests.get(f"http://jungle-strengthened-aardvark.glitch.me/followers/{username}")
+        #response = requests.get(f"http://jungle-strengthened-aardvark.glitch.me/followers/{username}")
+        response = requests.get(f"https://vnmppd-5000.csb.app/followers/{username}")
         if response.status_code == 200:
             data = json.loads(response.text)
             if isinstance(data, int):
@@ -992,7 +1001,8 @@ def is_scratcher2(username):
 @app.route("/get/following-count/<username>/")
 def following(username):
     try:
-        response = requests.get(f"http://jungle-strengthened-aardvark.glitch.me/following/{username}")
+        #response = requests.get(f"http://jungle-strengthened-aardvark.glitch.me/following/{username}")
+        response = requests.get(f"https://vnmppd-5000.csb.app/following/{username}")
         if response.status_code == 200:
             data = json.loads(response.text)
             if isinstance(data, int):
@@ -1204,6 +1214,20 @@ def forum_title(post_id):
         return "Username not found"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {str(e)}"
+
+@app.route("/static/issue.txt")
+def get_issue():
+    # Verify the password in the header
+    password = request.headers.get('Allow-Main-Only')
+    protect = request.headers.get('Allow-Orgin')
+    if password != 'superlongpassword':
+        abort(401)
+    if protect != 'https://scratch-get-data.kokoiscool.repl.co':
+      abort(401)
+
+    # Return the issue.txt file
+    return send_file('static/issue.txt')
+
 
 @app.route("/get/forum/category/<post_id>/")
 def forum_category(post_id):
@@ -2156,14 +2180,20 @@ def subscribe_email():
         conn = sqlite3.connect(DATABASE_NAME)
         c = conn.cursor()
 
-        # Insert the email into the email_subscribed_users table
-        c.execute('INSERT INTO email_subscribed_users (email) VALUES (?)', (email,))
-        conn.commit()
-        conn.close()
+        c.execute('SELECT email FROM email_subscribed_users where email = ?', (email,))
+        exist = c.fetchone()
+        if not exist:
 
-        ServerFiles.email_send.send_email_for_update(email)
+          # Insert the email into the email_subscribed_users table
+          c.execute('INSERT INTO email_subscribed_users (email) VALUES (?)', (email,))
+          conn.commit()
+          conn.close()
 
-        return jsonify({'message': 'You have successfully subscribed to our newsletter!'})
+          ServerFiles.email_send.send_email_for_update(email)
+
+          return jsonify({'message': 'You have successfully subscribed to our newsletter!'})
+        else:
+          return jsonify({'message': 'You have already subscribed to our newsletter!'})
     
     except Exception as e:
         return jsonify({'error': str(e)})
@@ -2324,6 +2354,10 @@ def set_server_header():
 @app.route('/favicon.ico')
 def favicon():
     return send_file('static/favicon.png', mimetype='image/png')
+
+@app.route('/robots.txt')
+def robot():
+  return send_file('static/robots.txt')
 
 @app.errorhandler(404)
 def page_not_found(e):
