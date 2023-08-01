@@ -63,3 +63,5 @@ def decrypt_file():
 
     print("Decryption completed successfully.")
 
+encrypt_file()
+
