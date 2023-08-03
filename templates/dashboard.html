@@ -50,9 +50,15 @@
   </nav>
   <div class="sidebar">
     <ul class="nav flex-column">
+      <p>Links:</p>
       <li class="nav-item">
         <a class="nav-link" href="../">Home</a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/docs">Docs</a>
+      </li>
+      <br>
+      <p>Dashboard:</p>
       <li class="nav-item">
         <a class="nav-link active" href="#">Dashboard</a>
       </li>
@@ -86,6 +92,14 @@
             </div>
           </div>
         </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Requests Sent per Day</h5>
+              <canvas id="requestsChart"></canvas>
+            </div>
+          </div>
+        </div>
         <div class="col-md-4">
           <div class="card">
             <div class="card-body">
@@ -98,52 +112,58 @@
     </div>
   </div>
 
-  <!-- Delete account modal -->
-  <div class="modal fade" id="deleteAccountModal" tabindex="-1" role="dialog" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="deleteAccountModalLabel">Delete account</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          Are you sure you want to delete your account? This action cannot be undone.
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
-          <button type="button" class="btn btn-danger" id="confirmDeleteAccount">Yes, delete my account</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Include Chart.js script from a CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Your jQuery, Bootstrap, and other scripts remain the same -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
   <script>
     $(document).ready(function() {
-      // Show delete account modal when delete account button is clicked
-      $('.delete-account').click(function() {
-        $('#deleteAccountModal').modal('show');
-      });
+      // Your other scripts here
+    });
+  </script>
 
-      // Send AJAX request to delete account when confirm delete button is clicked
-      $('#confirmDeleteAccount').click(function() {
-        $.ajax({
-          url: '/delete_account',
-          type: 'POST',
-          success: function(response) {
-            // Redirect to home page after account is deleted
-            window.location.href = '/';
+  <!-- Script for creating and rendering the chart -->
+  <script>
+    // Access the data passed from Flask
+    var dates = {{ datas | safe }};
+    var requests_count = {{ requests_count | safe }};
+
+    // Create the chart
+    var ctx = document.getElementById('requestsChart').getContext('2d');
+    var requestsChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [{
+          label: 'Requests Sent',
+          data: requests_count,
+          fill: false,
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            display: true,
+            title: {
+              display: true,
+              text: 'Date'
+            }
           },
-          error: function(error) {
-            console.log(error);
+          y: {
+            display: true,
+            title: {
+              display: true,
+              text: 'Requests Sent'
+            }
           }
-        });
-      });
+        }
+      }
     });
   </script>
 </body>

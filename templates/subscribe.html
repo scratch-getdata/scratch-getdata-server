@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subscribe to Updates</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Code&display=swap">
+    <style>
+        body {
+            margin: 1vw;
+            background-color: #222a3b;
+            font-family: 'Fira Code', monospace;
+            color: white;
+            padding: 2vw;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        .main {
+            text-align: center;
+            margin-top: 4vw;
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: white;
+            font-weight: 500;
+            text-shadow: 2px 2px 20px blue;
+            flex-wrap: wrap;
+            animation-name: backgroundColorPalette;
+            animation-duration: 5s;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+            animation-timing-function: linear;
+        }
+
+        h6 {
+            font-size: 1.2rem;
+            margin-top: 4vw;
+            width: 70vw;
+            text-align: center;
+        }
+
+        input[type="email"] {
+            padding: 0.5rem;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 0.3vw;
+            margin-top: 2vw;
+            background-color: #384154;
+            color: white;
+        }
+
+        input[type="submit"] {
+            padding: 0.5rem 1rem;
+            font-size: 1.2rem;
+            background-color: #384154;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 0.3vw;
+            margin-top: 2vw;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #2c3447;
+        }
+
+        @keyframes backgroundColorPalette {
+            0% {
+                color: #ee6055;
+                text-shadow: 2px 2px 20px #ee6055;
+            }
+            25% {
+                color: #60d394;
+                text-shadow: 2px 2px 20px #60d394;
+            }
+            50% {
+                color: #aaf683;
+                text-shadow: 2px 2px 20px #aaf683;
+            }
+            75% {
+                color: #ffd97d;
+                text-shadow: 2px 2px 20px #ffd97d;
+            }
+            100% {
+                color: #ff9b85;
+                text-shadow: 2px 2px 20px #ff9b85;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <h1>Subscribe to Updates</h1>
+        <form id="subscribeForm">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <br>
+            <input type="submit" value="Subscribe">
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Send the POST request when the form is submitted
+        $(document).ready(function() {
+            $('#subscribeForm').submit(function(event) {
+                event.preventDefault(); // Prevent default form submission
+                var email = $('#email').val();
+
+                // Send POST request to the Flask route
+                $.ajax({
+                    url: '/subscribe_email',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ 'email': email }),
+                    success: function(response) {
+                        alert(response.message);
+                    },
+                    error: function(xhr, status, error) {
+                        var errorMessage = JSON.parse(xhr.responseText).error;
+                        alert('Error: ' + errorMessage);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

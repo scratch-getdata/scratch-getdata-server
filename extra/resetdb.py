@@ -54,6 +54,8 @@ else:
   c.execute('DELETE FROM verify;') 
   c.execute('DELETE FROM strings;')
   c.execute('DELETE FROM specialAccounts;')
+  c.execute('DELETE FROM request_chart;')
+  c.execute('DELETE FROM request_chart_scratch;') 
 
 
 print('Commiting changes')
