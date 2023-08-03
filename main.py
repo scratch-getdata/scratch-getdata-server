@@ -1678,6 +1678,15 @@ def signup():
                     weak_passwords.add(line)
         return weak_passwords
 
+    def reserved_blocked_usernames():
+      blocked_username = set()
+      with open('blocked_username.txt', 'r') as file:
+        for line in file:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    blocked_username.add(line)
+        return blocked_username
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -1713,6 +1722,8 @@ def signup():
                       print("Weak password. Please choose a stronger one.")
                       flash('Weak password. Please choose a stronger one.')
                  else:
+                    blocked_username = reserved_blocked_usernames()
+                    if not username in blocked_username:
                       # Insert the new user into the database
                       c.execute('INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)',
                                 (username, password_hash, email))
@@ -1746,6 +1757,9 @@ def signup():
                       sendemailtorec(email, verification_code)
 
                       return redirect(url_for('email_verification'))
+
+                    else:
+                      flash('Username blocked or reserved')
 
             # Close the database connection
               conn.close()
