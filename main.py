@@ -1619,7 +1619,7 @@ def email_otp():
 @app.route("/scratchauth")
 def scratchauth():
     if "scratchusername" in session:
-        return f"You are {session['scratchusername']}"
+        redirect(url_for(dashboard))
     else:
         return redirect(f"https://auth.itinerary.eu.org/auth/?redirect={ base64('https://scratch-get-data.kokoiscool.repl.co/scratchauth/verify') }&name=Scratch-GetData")
 
@@ -1633,6 +1633,8 @@ def handle():
     resp = requests.get(f"https://auth.itinerary.eu.org/api/auth/verifyToken?privateCode={privateCode}").json()
     conn = sqlite3.connect(DATABASE_NAME)
     c = conn.cursor()
+
+    print(resp)
 
     if resp["redirect"] == "https://scratch-get-data.kokoiscool.repl.co/scratchauth/verify":
         if resp["valid"]:
@@ -1652,7 +1654,7 @@ def handle():
         else:
             return f"Authentication failed - please try again later."
     else:
-        return "Invalid Redirect", 400
+        abort(400, 'Invalid Redirect')
 
 @app.route('/serverstats')
 def server_status():
@@ -1990,18 +1992,28 @@ def dashboard():
             flash('error sign in with scratch user not found')
 
         else:
-            norequests = ""  # Set a default value here or fetch it from the database if applicable
-            print('result is not none')
             conn = sqlite3.connect('users.db')
             c = conn.cursor()
+            norequests = ""  # Set a default value here or fetch it from the database if applicable
+            c.execute("SELECT request FROM specialAccounts WHERE scratchusername = ?", (session['scratchusername'],))
+            requests_no = c.fetchone()
+            requests_no_str = str(requests_no)
+            requests_no = requests_no_str.replace("(", "").replace(")", "").replace("'", "").replace(",", "")
+            norequests = requests_no
+            print('result is not none')
             c.execute("SELECT key FROM specialAccounts WHERE scratchusername = ?", (session['scratchusername'],))
             api_key = c.fetchone()
             api_key_str = str(api_key)
             api_key = api_key_str.replace("(", "").replace(")", "").replace("'", "").replace(",", "")
 
+            #Extract the userid
+            userid_str = str(userid)
+            userid = userid_str.replace("(", "").replace(")", "").replace("'", "").replace(",", "")
+
             # Fetch data for the user from the request_chart table
-            c.execute('SELECT date, requests_count FROM request_chart_scratch WHERE userid = ?', (userid,))
+            c.execute('SELECT date, requests_count FROM request_count_scratch WHERE userid = ?', (userid,))
             data = c.fetchall()
+            print(data)
             dates = [row[0] for row in data]
             requests_count = [row[1] for row in data]
 
@@ -2010,6 +2022,9 @@ def dashboard():
             # Convert lists to JSON format
             dates_json = json.dumps(dates)
             requests_count_json = json.dumps(requests_count)
+
+            print(dates_json)
+            print(requests_count_json)
 
             return render_template('dashboard.html', username=session['scratchusername'], result=api_key, requests_left=requests_left, requests_sent=norequests, datas=dates_json, requests_count=requests_count_json)
 
@@ -2375,23 +2390,29 @@ def robot():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 404
+    if e.description is None or e.description == '':
+      return render_template('404.html', message='(The system did not return any information)'), 404
+    else:
+      return render_template('404.html', message=e.description), 404
 
 @app.errorhandler(500)
 def internel_server_error(e):
-    return render_template('500.html'), 500
+    if e.description is None or e.description == '':
+      return render_template('500.html', message='(The system did not return any information)'), 500
+    else:
+      return render_template('500.html', message=e.description), 500
 
 @app.errorhandler(401)
 def unauthorized(e):
-    return render_template('401.html'), 401
+    return render_template('401.html', message=e.description), 401
 
 @app.errorhandler(400)
 def bad_request(e):
-    return render_template('400.html'), 400
+    return render_template('400.html', message=e.description), 400
 
 @app.errorhandler(405)
 def meathod_not_allowed(e):
-    return render_template('405.html'), 400
+    return render_template('405.html', message=e.description), 400
 
 if __name__ == '__main__':
     #app.run(host='0.0.0.0', port=8080, debug=True, use_reloader=False)
