@@ -67,6 +67,7 @@ def get_current_time_str():
 
 
 uptime_str = calculate_uptime(start_time)
+
 print(f"Uptime: {uptime_str}")
 
 
@@ -227,7 +228,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DATABASE_PATH_FOR_BLAHBLA
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 jwt = JWTManager(app)
-CORS(app)
+cors = CORS(app, resources={r"/static/*": {"origins": "scratch-get-data.kokoiscool.repl.co"}})
 
 db = SQLAlchemy(app)
 
@@ -805,9 +806,30 @@ def check_key():
 def get_scratch_data(url):
     proxy_url = 'https://jungle-strengthened-aardvark.glitch.me/get/'
     proxy_url_backup = 'https://vnmppd-5000.csb.app/scratch_proxy/'
+    proxy_super_backup = 'https://thingproxy.freeboard.io/fetch/'
     proxied_url = proxy_url_backup + url
-    response = requests.get(proxied_url)
-    response.raise_for_status()
+    try:
+      response = requests.get(proxied_url)
+      response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+      if response.status_code == 429:
+          print("Too Many Requests")
+          proxied_url = proxy_url + url
+          try:
+            response = requests.get(proxied_url)
+            response.raise_for_status()
+          except requests.exceptions.HTTPError as err:
+            if response.status_code == 429:
+              proxied_url = proxy_url + url
+              try:
+                response = requests.get(proxied_url)
+                response.raise_for_status()
+              except requests.exceptions.HTTPError as err:
+                if response.status_code == 429:
+                  response = ServerFiles.proxy.send(url)
+            
+      else:
+          pass
 
     try:
         return json.loads(response.text)
@@ -818,8 +840,36 @@ def get_scratch_data(url):
             return response.text
 
 def get_scratch_data_wiwo(url):
-    response = requests.get(url)
     response_text = response.text
+    try:
+      response = requests.get(url)
+      response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+      proxy_url = 'https://jungle-strengthened-aardvark.glitch.me/get/'
+      proxy_url_backup = 'https://vnmppd-5000.csb.app/scratch_proxy/'
+      proxy_super_backup = 'https://thingproxy.freeboard.io/fetch/'
+      proxied_url = proxy_url_backup + url
+      try:
+        response = requests.get(proxied_url)
+        response.raise_for_status()
+      except requests.exceptions.HTTPError as err:
+        if response.status_code == 429:
+          proxied_url = proxy_url + url
+          try:
+           response = requests.get(proxied_url)
+           response.raise_for_status()
+
+          except requests.exceptions.HTTPError as err:
+           if response.status_code == 429:
+              proxied_url = proxy_super_backup + url
+              try:
+                response = requests.get(proxied_url)
+                response.raise_for_status()
+              except requests.exceptions.HTTPError as err:
+                if response.status_code == 429:
+                  response = ServerFiles.proxy.send(url)
+            
+      
 
     try:
         parsed_data = response.json()  # Try parsing the response content as JSON
@@ -831,10 +881,27 @@ def get_scratch_data_wiwo(url):
 def get_scratch_data_nojson(url):
     proxy_url = 'https://jungle-strengthened-aardvark.glitch.me/get/'
     proxy_url_backup = 'https://vnmppd-5000.csb.app/scratch_proxy/'
+    proxy_super_backup = 'https://thingproxy.freeboard.io/fetch/'
     proxied_url = proxy_url_backup + url
-    response = requests.get(proxied_url)
-    response.raise_for_status()
-
+    try:
+      response = requests.get(proxied_url)
+      response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+      if response.status_code == 429:
+        proxied_url = proxy_url + url
+        try:
+          response = requests.get(proxied_url)
+          response.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+          if response.status_code == 429:
+            try:
+              proxied_url = proxy_super_backup + url
+              response = requests.get(proxied_url)
+              response.raise_for_status()
+            except requests.exceptions.HTTPError as err:
+              if response.status_code == 429:
+               response = ServerFiles.proxy.send(url)
+              
     print("Response content:", response.text)  # Print the response content
 
     return response
