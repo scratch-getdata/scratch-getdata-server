@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+    <style>
+        /* Your existing CSS styles */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #222a3b;
+            font-family: 'Fira Code', monospace;
+            color: white;
+        }
+
+        a {
+            margin: 0;
+            padding: 0;
+            text-decoration: underline;
+            background-color: #222a3b;
+            font-family: 'Fira Code', monospace;
+            color: white;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-box {
+            background-color: #384154;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+        }
+
+        /* Additional styles for the pricing page */
+        .pricing-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .pricing-box {
+            background-color: #384154;
+            border-radius: 1rem;
+            padding: 3rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 350px;
+            margin: 0 1rem;
+        }
+
+        .pricing-box h2 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+
+        .pricing-box p {
+            margin: 0;
+            font-size: 1.2rem;
+            opacity: 0.7;
+        }
+
+        .pricing-box .price {
+            font-size: 2.5rem;
+            margin-top: 2rem;
+        }
+
+        /* Updated styles for the Choose Plan button */
+        .pricing-box .choose-plan-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ee6055;
+            color: white;
+            font-size: 16px;
+            text-decoration: none;
+            border-radius: 5px;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+            margin-top: 2rem;
+        }
+
+        .pricing-box .choose-plan-button:hover {
+            background-color: #ff9b85;
+        }
+
+        /* Styles for flash messages */
+        ul.flash-messages {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* Additional styles for features */
+        .features {
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .features ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+
+        .features li {
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="pricing-container">
+        <div class="pricing-box">
+            <h2>Free Plan</h2>
+            <p>Perfect for getting started</p>
+            <div class="price">Price: free</div>
+            <div class="features">
+              <p>features:</p>
+              <br>
+                <ul>
+                    <li>Cached Data (Means it is not always up-to-date)</li>
+                    <li>1 Api key</li>
+                    <li>Dashboard</li>
+                    <li>General Support</li>
+                </ul>
+            </div>
+            <a href="/signup" class="choose-plan-button">Choose Plan</a>
+        </div>
+    </div>
+</body>
+</html>

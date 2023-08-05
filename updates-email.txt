@@ -1,1 +1,1 @@
-Added Suscribe and Email Sending
+Added Subscribe and Email Sending

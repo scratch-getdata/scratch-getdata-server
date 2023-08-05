@@ -1,23 +1,15 @@
 #'http': 'socks4://194.226.164.214:1080',
 
-import socks
-import socket
-import urllib.request
-
-def create_connection(address, timeout=None, source_address=None):
-    sock = socks.socksocket(socket.AF_INET)  # Force IPv4
-    sock.settimeout(timeout)
-    if source_address:
-        sock.bind(source_address)
-    sock.connect(address)
-    return sock
+import requests
 
 def get_data(proxy_host, proxy_port, url_to_send):
-    socks.setdefaultproxy(socks.SOCKS4, proxy_host, proxy_port)
-    socket.socket = socks.socksocket
-    socket.create_connection = create_connection  # Override default create_connection function
-    response = urllib.request.urlopen(url_to_send)
-    return response.read()
+    proxies = {
+        'http': f'socks4://{proxy_host}:{proxy_port}',
+        'https': f'socks4://{proxy_host}:{proxy_port}'
+    }
 
-response = get_data('185.179.196.19', 1090, 'https://www.example.com')
+    response = requests.get(url_to_send, proxies=proxies)
+    return response.content
+
+response = get_data('51.222.29.254', 47103, 'https://www.example.com')
 print(response)

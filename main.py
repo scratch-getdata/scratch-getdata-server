@@ -827,6 +827,7 @@ def get_scratch_data(url):
               except requests.exceptions.HTTPError as err:
                 if response.status_code == 429:
                   response = ServerFiles.proxy.send(url)
+                  
             
       else:
           pass
@@ -906,7 +907,8 @@ def get_scratch_data_nojson(url):
 
     return response
 
-print(Fore.GREEN + "Important functions defined." + Fore.RESET)
+if nodebug == False:
+  print(Fore.GREEN + "Important functions defined." + Fore.RESET)
 
 
 # Flask routes and non important definitions
@@ -927,6 +929,10 @@ def home():
 @app.route('/googlea2534a03c1e2febf.html')
 def googleverify():
   return render_template('googlea2534a03c1e2febf.html')
+
+@app.route('/pricing')
+def pricing_page():
+  return render_template('pricing.html')
   
 
 @app.route('/settings')
@@ -2487,8 +2493,4 @@ if __name__ == '__main__':
       socketio.run(app, host='0.0.0.0', port=8080)
     else:
       socketio.run(app, host='0.0.0.0', debug=True, port=8080)
-    
   
-print(Fore.GREEN + "Flask Ready." + Fore.RESET)
-
-print(Fore.GREEN + "Flask Webserver started" + Fore.RESET)
