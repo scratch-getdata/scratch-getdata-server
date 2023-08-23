@@ -103,6 +103,14 @@ filecache = ["lockfile (>=0.9)"]
 redis = ["redis (>=2.10.5)"]
 
 [[package]]
+name = "cachelib"
+version = "0.9.0"
+description = "A collection of cache libraries in the same API interface."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "cachy"
 version = "0.3.0"
 description = "Cachy provides a simple yet effective caching library."
@@ -284,6 +292,18 @@ python-versions = "*"
 Flask = ">=1.1"
 Flask-Silk = ">=0.2"
 future = ">=0.13.0"
+
+[[package]]
+name = "flask-caching"
+version = "2.0.2"
+description = "Adds caching support to Flask applications."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+cachelib = ">=0.9.0,<0.10.0"
+Flask = "<3"
 
 [[package]]
 name = "flask-cors"
@@ -1185,7 +1205,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-ena
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10.0,<3.11"
-content-hash = "7943f80e4939c14b48c5ead9a7ffa68b058d5a5be4482b9fb8e80f0e31efd741"
+content-hash = "bad56fbba7c0698982f2341d0378a50c5113a38f54601681bd48c257680a5953"
 
 [metadata.files]
 apscheduler = []
@@ -1195,6 +1215,7 @@ bidict = []
 blinker = []
 bs4 = []
 cachecontrol = []
+cachelib = []
 cachy = []
 certifi = []
 cffi = []
@@ -1211,6 +1232,7 @@ exceptiongroup = []
 filelock = []
 flask = []
 flask-autoindex = []
+flask-caching = []
 flask-cors = []
 flask-jwt-extended = []
 flask-silk = []

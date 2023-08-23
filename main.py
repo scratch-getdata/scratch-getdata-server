@@ -15,6 +15,7 @@ from flask_cors import CORS, cross_origin
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import pytz
+import atexit
 import io
 import os
 import re
@@ -93,13 +94,14 @@ try:
       print(Fore.BLUE + "Debug logs Disabled!" + Fore.RESET)
 
 except:
-  nodebug = True
+  nodebug = False
   nowarning = True
 
 
   
-
+@atexit.register
 def signal_handler(signal, frame):
+    print('Attempt')
     if nodebug == False:
       print("QUIT Signal Recived.")
       print("Closing Database")
@@ -118,12 +120,16 @@ def signal_handler(signal, frame):
     print("Gracefully shutdown complete.")
     sys.exit(0)
 
+signal.signal(signal.SIGTERM, signal_handler)
+
 # Register the signal_handler function to be called only on SIGINT (Ctrl+C)
-try:
-    # Set the signal handler only for SIGINT (Ctrl+C) signal
-    signal.signal(signal.SIGINT, signal_handler)
-except (OSError, RuntimeError):
-    pass
+#try:
+#    # Set the signal handler only for SIGINT (Ctrl+C) signal
+#    signal.signal(signal.SIGINT, signal_handler)
+#except (OSError, RuntimeError):
+#    pass
+
+#atexit.register(signal_handler)
 
 #Decrypt Database
 
@@ -799,46 +805,76 @@ def check_key():
 
         conn.close()
 
+# Testion imports
+
+from flask_caching import Cache
+
+# Testing init
+
+app.config['CACHE_TYPE'] = 'simple'
+app.config['CACHE_DEFAULT_TIMEOUT'] = 2 * 24 * 3600  # 2 days in seconds
+cache = Cache(app)
+
+# Testing
+
+# Your existing get_scratch_data function with caching
+
+# Your existing get_scratch_data function with caching
+def get_scratch_data(url):
+    #cached_data = cache.get(url)
+    #if cached_data:
+    #    return cached_data
+
+    proxy_urls = [
+        'https://thingproxy.freeboard.io/fetch/'
+    ]
+    
+    for proxy_url in proxy_urls:
+        proxied_url = proxy_url + url
+        try:
+            response = requests.get(proxied_url)
+            response.raise_for_status()
+            data = response.text
+          
+            if data.strip():  # Check if the data is not empty
+                cache.set(url, data)
+                return data
+            else:
+                print(f"Empty response from proxy: {proxy_url}")
+        except requests.exceptions.HTTPError as err:
+            if response.status_code == 429:
+                print("Too Many Requests")
+            else:
+                print(f"Error with proxy: {proxy_url}. Retrying with next proxy.")
+                continue  # Skip to the next proxy
+    
+    # If all proxies fail, try using SOCKS4 proxy
+    try:
+        response = ServerFiles.proxy.send(url)  # Replace with your actual code for SOCKS4 proxy
+        response.raise_for_status()
+        data = response.text
+        if data.strip():  # Check if the data is not empty
+            cache.set(url, data)
+            return data
+        else:
+            print("Empty response from SOCKS4 proxy")
+    except requests.exceptions.HTTPError as err:
+        print("All proxies failed, including SOCKS4 proxy")
+        # Handle the error as needed
+    
+    return "All proxy options failed"
+
+# Route to get Scratch data
+@app.route('/g3e3t_scratch_data/<path:url>')
+def get_scratch_data_route(url):
+    url = request.full_path.replace('/g3e3t_scratch_data/', '', 1)
+    return jsonify(get_scratch_data(url))
+
 
 
 # Require Define Functions:
 
-def get_scratch_data(url):
-    proxy_url = 'https://jungle-strengthened-aardvark.glitch.me/get/'
-    proxy_url_backup = 'https://vnmppd-5000.csb.app/scratch_proxy/'
-    proxy_super_backup = 'https://thingproxy.freeboard.io/fetch/'
-    proxied_url = proxy_url_backup + url
-    try:
-      response = requests.get(proxied_url)
-      response.raise_for_status()
-    except requests.exceptions.HTTPError as err:
-      if response.status_code == 429:
-          print("Too Many Requests")
-          proxied_url = proxy_url + url
-          try:
-            response = requests.get(proxied_url)
-            response.raise_for_status()
-          except requests.exceptions.HTTPError as err:
-            if response.status_code == 429:
-              proxied_url = proxy_url + url
-              try:
-                response = requests.get(proxied_url)
-                response.raise_for_status()
-              except requests.exceptions.HTTPError as err:
-                if response.status_code == 429:
-                  response = ServerFiles.proxy.send(url)
-                  
-            
-      else:
-          pass
 
-    try:
-        return json.loads(response.text)
-    except ValueError:
-        try:
-            return int(response.text)
-        except ValueError:
-            return response.text
 
 def get_scratch_data_wiwo(url):
     response_text = response.text
@@ -1498,13 +1534,18 @@ def get_non_proccessed_project(projectid):
 @app.route('/get/user/user-exist/<user>/')
 def checkuseralive(user):
     url = 'https://api.scratch.mit.edu/accounts/checkusername/' + user
-    data = get_scratch_data(url)
-    print(data)
+    response = requests.get(url)
 
-    if data['msg'] != 'username exists':
-        return "false"
+    if response.status_code == 200:
+        data = response.json()
+        print(data)
+
+        if 'msg' in data and data['msg'] == 'username exists':
+            return "true"
+        else:
+            return "false"
     else:
-        return "true"
+        return "Error: Failed to retrieve user data"
 
 @app.route('/get/user/last_follower/<username>/')
 def last_follower(username):
@@ -1691,8 +1732,8 @@ def email_otp():
 
 @app.route("/scratchauth")
 def scratchauth():
-    if "scratchusername" in session:
-        redirect(url_for(dashboard))
+    if "scratchusername" in session.keys():
+        redirect(url_for('dashboard'))
     else:
         return redirect(f"https://auth.itinerary.eu.org/auth/?redirect={ base64('https://scratch-get-data.kokoiscool.repl.co/scratchauth/verify') }&name=Scratch-GetData")
 
@@ -2490,7 +2531,8 @@ def meathod_not_allowed(e):
 if __name__ == '__main__':
     #app.run(host='0.0.0.0', port=8080, debug=True, use_reloader=False)
     if os.environ['debug'] == 'false':
-      socketio.run(app, host='0.0.0.0', port=8080)
+      #socketio.run(app, host='0.0.0.0', port=8080)
+      socketio.run(app, host='0.0.0.0', debug=False, port=8080)
     else:
-      socketio.run(app, host='0.0.0.0', debug=True, port=8080)
+      socketio.run(app, host='0.0.0.0', debug=False, port=8080)
   
