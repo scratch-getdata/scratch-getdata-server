@@ -78,7 +78,7 @@ nodebug = False
 
 
 try:
- if os.environ['autotest'] != 'y'
+ if os.environ['autotest'] != 'y':
   if 'no-warning' in sys.argv:
       nowarning = True
       print(Fore.BLUE + "Warning Disabled!" + Fore.RESET)
