@@ -33,8 +33,8 @@ jobs:
     - name: Start Flask App
       env:
         DATABASE_ENCRYPTION_KEY: ${{ secrets.DATABASE_ENCRYPTION_KEY }}
-        debug: False
-        no_warning: False
+        debug: 'false'
+        no_warning: 'false'
       run: |
         python -c "from main import app; app.run(host='0.0.0.0', port=8080, debug=$debug, use_reloader=False, threaded=True, allow_unsafe_werkzeug=True)" &
 
