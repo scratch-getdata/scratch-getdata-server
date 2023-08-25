@@ -3,7 +3,12 @@ name: Auto Test
 on:
   push:
     branches:
-      - main
+      - autoreplit
+      - stable
+  pull_request:
+    branches:
+      - autoreplit
+      - stable
 
 jobs:
   test:
