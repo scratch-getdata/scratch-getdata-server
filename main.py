@@ -80,14 +80,14 @@ try:
   if 'no-warning' in sys.argv:
       nowarning = True
       print(Fore.BLUE + "Warning Disabled!" + Fore.RESET)
-  elif os.environ['no-warning'] == 'true':
+  elif os.environ['no-warning'] == 'True':
       nowarning = True
       print(Fore.BLUE + "Warning Disabled!" + Fore.RESET)
 
   if 'no-debug' in sys.argv:
       nodebug = True
       print(Fore.BLUE + "Debug logs Disabled!" + Fore.RESET)
-  elif os.environ['debug'] == 'false':
+  elif os.environ['debug'] == 'False':
       nodebug = True
       print(Fore.BLUE + "Debug logs Disabled!" + Fore.RESET)
 
