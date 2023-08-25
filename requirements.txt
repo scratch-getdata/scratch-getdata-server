@@ -1,7 +1,7 @@
 Flask==2.3.3
 Flask-AutoIndex==0.6.6
 Flask-JWT-Extended==4.5.2
-Flask-RESTful==0.3.9
+Flask-RESTful==0.3.10
 Flask-SQLAlchemy==3.0.5
 flask-sock
 PyJWT==2.4.0
