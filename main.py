@@ -75,8 +75,10 @@ print(f"Uptime: {uptime_str}")
 nowarning = False
 nodebug = False
 
-try:
 
+
+try:
+ if os.environ['autotest'] != 'y'
   if 'no-warning' in sys.argv:
       nowarning = True
       print(Fore.BLUE + "Warning Disabled!" + Fore.RESET)
@@ -90,7 +92,6 @@ try:
   elif os.environ['debug'] == 'false':
       nodebug = True
       print(Fore.BLUE + "Debug logs Disabled!" + Fore.RESET)
-
 except:
   nodebug = True
   nowarning = True
