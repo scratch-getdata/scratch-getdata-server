@@ -14,10 +14,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    env:
-      DATABASE_ENCRYPTION_KEY: ${{ secrets.DATABASE_ENCRYPTION_KEY }}
-      debug: true
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -28,13 +24,19 @@ jobs:
         python-version: 3.x
 
     - name: Install dependencies
+      env:
+        DATABASE_ENCRYPTION_KEY: ${{ secrets.DATABASE_ENCRYPTION_KEY }}
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
     - name: Start Flask App
+      env:
+        DATABASE_ENCRYPTION_KEY: ${{ secrets.DATABASE_ENCRYPTION_KEY }}
+        debug: true
+        no_warning: false
       run: |
-        DATABASE_ENCRYPTION_KEY=$DATABASE_ENCRYPTION_KEY python main.py &
+        python main.py &
 
     - name: Wait for Flask to start
       run: sleep 4
