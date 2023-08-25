@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      no-warning: false
+      DATABASE_ENCRYPTION_KEY: ${{ secrets.DATABASE_ENCRYPTION_KEY }}
+      no_warning: false
       debug: true
 
     steps:
@@ -27,13 +28,6 @@ jobs:
       with:
         python-version: 3.x
 
-    - name: Generate Random Key
-      id: random_key
-      run: echo "DATABASE_ENCRYPTION_KEY=$(openssl rand -base64 32)" >> $GITHUB_ENV
-
-    - name: Show Random Key
-      run: echo $DATABASE_ENCRYPTION_KEY
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -41,7 +35,7 @@ jobs:
 
     - name: Start Flask App
       run: |
-        DATABASE_ENCRYPTION_KEY=$DATABASE_ENCRYPTION_KEY no-warning=$no-warning debug=$debug python main.py &
+        no-warning=$no_warning debug=$debug DATABASE_ENCRYPTION_KEY=$DATABASE_ENCRYPTION_KEY python main.py &
 
     - name: Wait for Flask to start
       run: sleep 4
