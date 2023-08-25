@@ -16,7 +16,6 @@ jobs:
 
     env:
       DATABASE_ENCRYPTION_KEY: ${{ secrets.DATABASE_ENCRYPTION_KEY }}
-      no_warning: false
       debug: true
 
     steps:
@@ -35,7 +34,7 @@ jobs:
 
     - name: Start Flask App
       run: |
-        no-warning=$no_warning debug=$debug DATABASE_ENCRYPTION_KEY=$DATABASE_ENCRYPTION_KEY python main.py &
+        DATABASE_ENCRYPTION_KEY=$DATABASE_ENCRYPTION_KEY python main.py &
 
     - name: Wait for Flask to start
       run: sleep 4
