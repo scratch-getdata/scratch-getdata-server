@@ -106,6 +106,11 @@ def signal_handler(signal, frame):
       print("QUIT Signal Recived.")
       print("Closing Database")
     try:
+      try:
+        if os.environ['reencrypt_database_setting_override'] == 'true':
+          reencrypt_database = 'true'
+      except:
+        pass
       if reencrypt_database == 'true':
         if nodebug == False:
           print("Encrypting the database")
@@ -118,7 +123,7 @@ def signal_handler(signal, frame):
       pass
 
     print("Gracefully shutdown complete.")
-    sys.exit(0)
+    os.kill(os.getpid(), 9)
 
 signal.signal(signal.SIGTERM, signal_handler)
 
@@ -724,6 +729,43 @@ def inject_cors_headers():
     return dict(add_cors_headers=add_cors_headers)
 
 
+from datetime import datetime, timedelta
+
+unprotected_routes = ['get']
+
+# List of unblocked sites
+unblocked_list = ['scratch-get-data.kokoiscool.repl.co', 'replit.com', 'scratch-get-data--kokoiscool.repl.co', 'auth.itinerary.eu.org/']
+
+# List of blocked user agents
+blocked_user_agents = ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299']
+
+@app.before_request
+def block_embedded_requests():
+    # Check if the request is coming from a blocked site or user agent
+    if (
+        not request.user_agent
+        or (
+            request.referrer
+            and request.referrer.split('/')[2] not in unblocked_list
+            and request.path not in unprotected_routes
+        )
+    ):
+        if request.referrer:
+          if not any(site in request.referrer for site in unblocked_list):
+        # Log the blocked request for debugging purposes if there is a referrer
+            print(
+                'Blocked request:',
+                request.referrer,
+                request.host,
+                request.path,
+                request.user_agent,
+                str(request.user_agent),
+            )
+            # Return an error message or redirect to a blocked page
+            return render_template('blocked.html'), 400
+
+    
+
 @app.before_request
 def check_key():
     if '/get' in request.path:
@@ -732,17 +774,15 @@ def check_key():
 
         # Connect to SQLite database
         conn = sqlite3.connect('users.db')
+        c = conn.cursor()
 
-        # Bypass the key check if random_key is None
         if random_key is None:
             return render_template('nokeyprovided.html')
 
         # Check if the key is in the database
-        c = conn.cursor()
         c.execute('SELECT * FROM keys WHERE key = ?', (random_key,))
         result = c.fetchone()
 
-        # If the key is not found, bypass the key check
         if result is None:
             c.execute('SELECT * FROM specialAccounts WHERE key = ?', (random_key,))
             result = c.fetchone()
@@ -750,58 +790,64 @@ def check_key():
                 return render_template('keynotfound.html')
 
         # Get the user ID from the session
-        c.execute('SELECT userid FROM keys WHERE key = ?', (random_key,))
+        user_id_query = 'SELECT userid FROM keys WHERE key = ?'
+        special_account_query = 'SELECT userid FROM specialAccounts WHERE key = ?'
+
+        c.execute(user_id_query, (random_key,))
         try:
-            user_id = c.fetchone()[0]  # Extract the value from the tuple
-            specialAccount = 'false'
+            user_id = c.fetchone()[0]
+            specialAccount = False
         except TypeError:
-            specialAccount = 'true'
-            c.execute('SELECT userid FROM specialAccounts WHERE key = ?', (random_key,))
+            specialAccount = True
+            c.execute(special_account_query, (random_key,))
             user_id = c.fetchone()[0]
 
-        # Get the current date in 'YYYY-MM-DD' format
         now = datetime.utcnow()
         now_str = now.strftime('%Y-%m-%d')
 
-        if specialAccount == 'true':
-            # Update the requests column in specialAccounts table
-            c.execute('UPDATE specialAccounts SET request = (SELECT COALESCE(request, 0) + 1 FROM specialAccounts WHERE userid = ?) WHERE userid = ?', (user_id, user_id))
+        if specialAccount:
+            c.execute('UPDATE specialAccounts SET request = COALESCE(request, 0) + 1 WHERE userid = ?', (user_id,))
             conn.commit()
 
-            # Check if there is an entry for the current date in request_count_scratch
             c.execute('SELECT requests_count FROM request_count_scratch WHERE userid = ? AND date = ?', (user_id, now_str))
             current_requests_count = c.fetchone()
 
             if current_requests_count:
-                # If an entry exists for the current date, update the count
                 current_count = current_requests_count[0]
                 new_count = current_count + 1
                 c.execute('UPDATE request_count_scratch SET requests_count = ? WHERE userid = ? AND date = ?', (new_count, user_id, now_str))
-                conn.commit()
             else:
-                # If no entry exists for the current date, insert a new row
                 c.execute('INSERT INTO request_count_scratch (userid, date, requests_count) VALUES (?, ?, 1)', (user_id, now_str))
-                conn.commit()
-
-        else:
-            # Update the count column in requests table
-            c.execute('UPDATE requests SET count = (SELECT COALESCE(count, 0) + 1 FROM requests WHERE userid = ?) WHERE userid = ?', (user_id, user_id))
             conn.commit()
 
-            # Check if there is an entry for the current date in request_chart
+        else:
+            blocking_time = now - timedelta(minutes=1)
+            c.execute('SELECT COUNT(*) FROM requests_blocking WHERE key = ? AND timestamp >= ?', (random_key, blocking_time))
+            count = c.fetchone()[0]
+
+            if count >= 10:
+                return render_template('toomanyrequests.html')
+
+            c.execute('INSERT INTO requests_blocking (key, timestamp) VALUES (?, ?)', (random_key, now))
+            conn.commit()
+
+            old_time = now - timedelta(minutes=5)
+            c.execute('DELETE FROM requests_blocking WHERE timestamp < ?', (old_time,))
+            conn.commit()
+
+            c.execute('UPDATE requests SET count = COALESCE(count, 0) + 1 WHERE userid = ?', (user_id,))
+            conn.commit()
+
             c.execute('SELECT requests_count FROM request_chart WHERE userid = ? AND date = ?', (user_id, now_str))
             current_requests_count = c.fetchone()
 
             if current_requests_count:
-                # If an entry exists for the current date, update the count
                 current_count = current_requests_count[0]
                 new_count = current_count + 1
                 c.execute('UPDATE request_chart SET requests_count = ? WHERE userid = ? AND date = ?', (new_count, user_id, now_str))
-                conn.commit()
             else:
-                # If no entry exists for the current date, insert a new row
                 c.execute('INSERT INTO request_chart (userid, date, requests_count) VALUES (?, ?, 1)', (user_id, now_str))
-                conn.commit()
+            conn.commit()
 
         conn.close()
 
@@ -842,8 +888,8 @@ def get_scratch_data(url):
             else:
                 print(f"Empty response from proxy: {proxy_url}")
         except requests.exceptions.HTTPError as err:
-            if response.status_code == 429:
-                print("Too Many Requests")
+            if response.status_code == 429 or response.content == "{'response': 'Too many requests'}":
+                print("Too Many Requests" + response.content)
             else:
                 print(f"Error with proxy: {proxy_url}. Retrying with next proxy.")
                 continue  # Skip to the next proxy
@@ -890,20 +936,20 @@ def get_scratch_data_wiwo(url):
         response = requests.get(proxied_url)
         response.raise_for_status()
       except requests.exceptions.HTTPError as err:
-        if response.status_code == 429:
+        if response.status_code == 429 or response.content == "{'response': 'Too many requests'}":
           proxied_url = proxy_url + url
           try:
            response = requests.get(proxied_url)
            response.raise_for_status()
 
           except requests.exceptions.HTTPError as err:
-           if response.status_code == 429:
+           if response.status_code == 429 or response.content == "{'response': 'Too many requests'}":
               proxied_url = proxy_super_backup + url
               try:
                 response = requests.get(proxied_url)
                 response.raise_for_status()
               except requests.exceptions.HTTPError as err:
-                if response.status_code == 429:
+                if response.status_code == 429 or response.content == "{'response': 'Too many requests'}":
                   response = ServerFiles.proxy.send(url)
             
       
@@ -1534,16 +1580,16 @@ def get_non_proccessed_project(projectid):
 @app.route('/get/user/user-exist/<user>/')
 def checkuseralive(user):
     url = 'https://api.scratch.mit.edu/accounts/checkusername/' + user
-    response = requests.get(url)
+    response = get_scratch_data(url)
 
-    if response.status_code == 200:
-        data = response.json()
+    if response:
+        data = json.loads(response)
         print(data)
 
         if 'msg' in data and data['msg'] == 'username exists':
-            return "true"
+            return jsonify(True)
         else:
-            return "false"
+            return jsonify(False)
     else:
         return "Error: Failed to retrieve user data"
 
@@ -1577,7 +1623,8 @@ def restart():
 
     if provided_secret == os.environ['internal_secret'] and request.path == "/internal/restart":
         # Return the "Restarting..." message
-        os.kill(os.getpid(), 9)
+        #os.kill(os.getpid(), 9)
+        signal_handler('SIGNIT', 'Frame')
         return "Restarting..."
     else:
         abort(401)

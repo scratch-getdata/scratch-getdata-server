@@ -10,11 +10,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz4fnFO9gybBud7M4JtFq9rL4p6lE0M0r1lZ3GgK8uSfG4kxMh/0f5hU5I" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl5/6en8XCp+HHAAK5GSLf2xlYtvJ8U2Q4U+9cuEnJoa3" crossorigin="anonymous"></script>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style-nospan.css') }}">
+    <style>
+        /* Adjust the padding and margins for the top bar */
+        .custom-navbar {
+          padding: 15px;
+          margin-bottom: 20px;
+        }
+
+        /* Style adjustments for the buttons */
+        .navbar-nav .nav-item .btn {
+          margin: 0 5px; /* Adjust as needed */
+          padding: 8px 15px; /* Adjust as needed */
+        }
+    </style>
 </head>
 <body>
-  <div class="alert alert-{{status}} alert-dismissible">
-   {{ message }}
-</div>
   <nav class="navbar navbar-expand-lg navbar-light bg-light custom-navbar" data-bs-theme="dark">
     <div class="container-fluid">
       <a class="navbar-brand" href="#">Scratch-GetData</a>
