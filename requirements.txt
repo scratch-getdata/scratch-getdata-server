@@ -14,4 +14,4 @@ email-validator==2.1.0.post1
 itsdangerous
 pycryptodome==3.11.0
 pytz==2021.1
-requests==2.25.1
+requests==2.31.0
